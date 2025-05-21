@@ -1,36 +1,41 @@
+// middlewares/auth.js
 const jwt = require("jsonwebtoken");
 
-// Verifica token JWT
+/**
+ * Middleware: Verifica si el token JWT es válido.
+ */
 const auth = (req, res, next) => {
   const token = req.header("Authorization");
 
   if (!token) {
     return res.status(401).json({
       status: "error",
-      message: "Acceso denegado. Falta token."
+      message: "Acceso denegado. Token no proporcionado.",
     });
   }
 
   try {
-    const payload = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = payload;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
     next();
   } catch (error) {
     console.error("❌ Token inválido:", error);
     return res.status(401).json({
       status: "error",
       message: "Token inválido o expirado.",
-      error: error.message
+      error: error.message,
     });
   }
 };
 
-// Verifica si el usuario tiene rol admin
+/**
+ * Middleware: Verifica si el usuario autenticado tiene rol 'admin'.
+ */
 const esAdmin = (req, res, next) => {
-  if (req.user.rol !== "admin") {
+  if (!req.user || req.user.rol !== "admin") {
     return res.status(403).json({
       status: "error",
-      message: "Acceso denegado. Solo administradores pueden realizar esta acción."
+      message: "Acceso denegado. Solo administradores pueden realizar esta acción.",
     });
   }
   next();
@@ -38,5 +43,5 @@ const esAdmin = (req, res, next) => {
 
 module.exports = {
   auth,
-  esAdmin
+  esAdmin,
 };

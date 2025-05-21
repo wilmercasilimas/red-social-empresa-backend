@@ -17,6 +17,10 @@ app.use(express.urlencoded({ extended: true }));
 const userRoutes = require("./routes/user");
 app.use("/api/user", userRoutes);
 
+const areaRoutes = require("./routes/area");
+app.use("/api/area", areaRoutes);
+
+
 // Ruta de prueba
 app.get("/", (req, res) => {
   res.status(200).send({

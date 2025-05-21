@@ -1,45 +1,49 @@
-const { Schema, model } = require("mongoose");
+// models/User.js
+const { Schema, model, Types } = require("mongoose");
 
-const UserSchema = Schema({
+const UserSchema = new Schema({
   nombre: {
     type: String,
-    required: true
+    required: true,
+    trim: true,
   },
   apellidos: {
-    type: String
+    type: String,
+    trim: true,
   },
   email: {
     type: String,
     unique: true,
-    required: true
+    required: true,
+    lowercase: true,
+    trim: true,
   },
   password: {
     type: String,
-    required: true
+    required: true,
   },
   cargo: {
     type: String,
-    default: "empleado"
+    default: "empleado",
   },
-  // Área como texto simple (sin ref ni ObjectId)
   area: {
-    type: String,
-    default: "Sin asignar"
+    type: Types.ObjectId, // Referencia a una colección externa
+    ref: "Area",
+    default: null,
   },
-  // Rol del usuario: admin o empleado
   rol: {
     type: String,
     enum: ["admin", "empleado"],
-    default: "empleado"
+    default: "empleado",
   },
   imagen: {
     type: String,
-    default: "default.png"
+    default: "default.png",
   },
   creado_en: {
     type: Date,
-    default: Date.now
-  }
+    default: Date.now,
+  },
 });
 
 module.exports = model("User", UserSchema);
