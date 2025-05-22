@@ -2,7 +2,12 @@ const express = require("express");
 const router = express.Router();
 
 // ✅ Importación correcta y única de todos los controladores de área
-const { crearArea, listarAreas, eliminarArea, detalleArea } = require("../controllers/area");
+const {
+  crearArea,
+  listarAreas,
+  eliminarArea,
+  detalleArea,
+} = require("../controllers/area");
 
 // ✅ Middleware de autenticación y verificación de rol
 const { auth, esAdmin } = require("../middlewares/auth");

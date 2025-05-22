@@ -1,5 +1,7 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const fs = require("fs");
+const path = require("path");
 const User = require("../models/User");
 const Area = require("../models/Area"); // ✅ Referencia necesaria
 
@@ -150,6 +152,41 @@ const login = async (req, res) => {
   }
 };
 
+// Subir imagen de avatar
+const subirAvatar = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        status: "error",
+        message: "No se ha subido ninguna imagen.",
+      });
+    }
+
+    const userId = req.user.id;
+    const archivo = req.file.filename;
+
+    const actualizado = await User.findByIdAndUpdate(
+      userId,
+      { imagen: archivo },
+      { new: true }
+    ).select("-password");
+
+    return res.status(200).json({
+      status: "success",
+      message: "Avatar actualizado correctamente.",
+      user: actualizado,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      status: "error",
+      message: "Error al subir avatar.",
+      error: error.message,
+    });
+  }
+};
+
+
+
 // LISTAR USUARIOS (admin)
 const listarUsuarios = async (req, res) => {
   try {
@@ -266,4 +303,5 @@ module.exports = {
   listarUsuarios,
   editarUsuario,
   eliminarUsuario,
+  subirAvatar 
 };
