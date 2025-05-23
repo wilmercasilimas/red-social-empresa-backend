@@ -5,6 +5,7 @@ const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const path = require("path");
 
+
 dotenv.config(); // Carga variables de entorno desde .env
 
 const app = express();
@@ -42,6 +43,10 @@ app.use("/api/tarea", tareaRoutes);
 // Rutas de publicaciones
 const publicacionRoutes = require("./routes/publicacion");
 app.use("/api/publicacion", publicacionRoutes);
+
+const incidenciaRoutes = require("./routes/incidencia");
+app.use("/api/incidencia", incidenciaRoutes);
+
 
 // Ruta de prueba
 app.get("/", (req, res) => {

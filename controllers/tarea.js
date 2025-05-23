@@ -1,12 +1,9 @@
 const Tarea = require("../models/Tarea");
 const User = require("../models/User");
 
-// Crear tarea
 const crearTarea = async (req, res) => {
   try {
     const { titulo, descripcion, asignada_a, fecha_entrega } = req.body;
-
-    // Verificar si el creador tiene rol válido
     const creador = req.user;
 
     if (!["admin", "gerencia"].includes(creador.rol)) {
@@ -16,9 +13,7 @@ const crearTarea = async (req, res) => {
       });
     }
 
-    // Verificar que el usuario asignado exista y tenga un cargo permitido
     const usuarioAsignado = await User.findById(asignada_a);
-
     if (!usuarioAsignado) {
       return res.status(404).json({
         status: "error",
@@ -58,7 +53,6 @@ const crearTarea = async (req, res) => {
   }
 };
 
-// Listar tareas del usuario autenticado
 const listarTareas = async (req, res) => {
   try {
     const tareas = await Tarea.find({ asignada_a: req.user.id })
@@ -80,24 +74,36 @@ const listarTareas = async (req, res) => {
   }
 };
 
-// Editar tarea
 const editarTarea = async (req, res) => {
   try {
     const { id } = req.params;
     const { titulo, descripcion, estado, fecha_entrega } = req.body;
 
-    const tareaActualizada = await Tarea.findByIdAndUpdate(
-      id,
-      { titulo, descripcion, estado, fecha_entrega },
-      { new: true }
-    );
+    const tarea = await Tarea.findById(id);
 
-    if (!tareaActualizada) {
+    if (!tarea) {
       return res.status(404).json({
         status: "error",
         message: "Tarea no encontrada.",
       });
     }
+
+    if (
+      tarea.creada_por.toString() !== req.user.id &&
+      req.user.rol !== "admin"
+    ) {
+      return res.status(403).json({
+        status: "error",
+        message: "No autorizado para editar esta tarea.",
+      });
+    }
+
+    tarea.titulo = titulo;
+    tarea.descripcion = descripcion;
+    tarea.estado = estado;
+    tarea.fecha_entrega = fecha_entrega;
+
+    const tareaActualizada = await tarea.save();
 
     return res.status(200).json({
       status: "success",
@@ -113,24 +119,33 @@ const editarTarea = async (req, res) => {
   }
 };
 
-// Eliminar tarea
 const eliminarTarea = async (req, res) => {
   try {
     const { id } = req.params;
+    const tarea = await Tarea.findById(id);
 
-    const tareaEliminada = await Tarea.findByIdAndDelete(id);
-
-    if (!tareaEliminada) {
+    if (!tarea) {
       return res.status(404).json({
         status: "error",
         message: "Tarea no encontrada.",
       });
     }
 
+    if (
+      tarea.creada_por.toString() !== req.user.id &&
+      req.user.rol !== "admin"
+    ) {
+      return res.status(403).json({
+        status: "error",
+        message: "No autorizado para eliminar esta tarea.",
+      });
+    }
+
+    await Tarea.findByIdAndDelete(id);
+
     return res.status(200).json({
       status: "success",
       message: "Tarea eliminada correctamente.",
-      tarea: tareaEliminada,
     });
   } catch (error) {
     return res.status(500).json({

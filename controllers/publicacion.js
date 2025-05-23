@@ -20,7 +20,6 @@ const crearPublicacion = async (req, res) => {
       tarea,
     });
 
-    // Si se sube una imagen
     if (req.file) {
       nueva.imagen = req.file.filename;
     }
@@ -33,7 +32,6 @@ const crearPublicacion = async (req, res) => {
       publicacion: guardada,
     });
   } catch (error) {
-    console.error("❌ Error al crear publicación:", error);
     return res.status(500).json({
       status: "error",
       message: "Error al crear publicación.",
@@ -42,7 +40,7 @@ const crearPublicacion = async (req, res) => {
   }
 };
 
-// Obtener publicaciones del usuario logueado
+// Publicaciones propias
 const misPublicaciones = async (req, res) => {
   try {
     const publicaciones = await Publicacion.find({ autor: req.user.id })
@@ -63,11 +61,11 @@ const misPublicaciones = async (req, res) => {
   }
 };
 
-// Listar todas las publicaciones (admin u otros usuarios autenticados)
+// Listado general
 const listarTodasPublicaciones = async (req, res) => {
   try {
     const publicaciones = await Publicacion.find()
-      .populate("autor", "nombre apellidos email imagen") // ✅ Corrección aquí
+      .populate("autor", "nombre apellidos email imagen")
       .populate("tarea", "titulo")
       .sort({ creado_en: -1 });
 
@@ -78,7 +76,6 @@ const listarTodasPublicaciones = async (req, res) => {
       publicaciones,
     });
   } catch (error) {
-    console.error("❌ Error al listar publicaciones:", error);
     return res.status(500).json({
       status: "error",
       message: "Error interno al obtener las publicaciones.",
@@ -87,7 +84,7 @@ const listarTodasPublicaciones = async (req, res) => {
   }
 };
 
-// Eliminar una publicación (propietario o admin)
+// Eliminar publicación solo si es del autor o admin
 const eliminarPublicacion = async (req, res) => {
   try {
     const publicacion = await Publicacion.findById(req.params.id);
@@ -109,7 +106,6 @@ const eliminarPublicacion = async (req, res) => {
       });
     }
 
-    // Eliminar imagen del sistema si existe
     if (publicacion.imagen) {
       const rutaImagen = path.join(
         __dirname,

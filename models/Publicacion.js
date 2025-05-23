@@ -15,7 +15,7 @@ const PublicacionSchema = new Schema({
     ref: "Tarea",
     required: true,
   },
-  usuario: { // 🔁 Renombrado de 'autor' a 'usuario'
+  autor: { // 🔁 Renombrado de 'autor' a 'usuario'
     type: Types.ObjectId,
     ref: "User",
     required: true,

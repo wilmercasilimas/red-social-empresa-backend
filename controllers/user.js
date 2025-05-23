@@ -3,14 +3,14 @@ const jwt = require("jsonwebtoken");
 const fs = require("fs");
 const path = require("path");
 const User = require("../models/User");
-const Area = require("../models/Area"); // ✅ Referencia necesaria
+const Area = require("../models/Area");
+const Incidencia = require("../models/Incidencia"); // ✅ Añadido
 
 // REGISTRO DE EMPLEADO POR ADMIN
 const registrar = async (req, res) => {
   try {
     const { nombre, apellidos, email, password, cargo, area, rol } = req.body;
 
-    // Validación de campos obligatorios
     if (!nombre || !email || !password) {
       return res.status(400).json({
         status: "error",
@@ -18,7 +18,6 @@ const registrar = async (req, res) => {
       });
     }
 
-    // Validar formato de correo
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return res.status(400).json({
@@ -27,7 +26,6 @@ const registrar = async (req, res) => {
       });
     }
 
-    // Verificar si ya existe el usuario
     const existe = await User.findOne({ email: email.toLowerCase() });
     if (existe) {
       return res.status(409).json({
@@ -36,7 +34,6 @@ const registrar = async (req, res) => {
       });
     }
 
-    // Si se proporciona área, verificar que exista en BD
     let areaId = null;
     if (area) {
       const areaExiste = await Area.findById(area);
@@ -49,10 +46,8 @@ const registrar = async (req, res) => {
       areaId = area;
     }
 
-    // Encriptar contraseña
     const hashedPass = await bcrypt.hash(password, 10);
 
-    // Crear nuevo usuario
     const nuevoUsuario = new User({
       nombre,
       apellidos,
@@ -85,7 +80,6 @@ const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Validación de campos
     if (!email || !password) {
       return res.status(400).json({
         status: "error",
@@ -93,10 +87,7 @@ const login = async (req, res) => {
       });
     }
 
-    // Normalizar el email (eliminar espacios y convertir a minúsculas)
     const emailNormalizado = email.trim().toLowerCase();
-
-    // Buscar al usuario
     const user = await User.findOne({ email: emailNormalizado });
 
     if (!user) {
@@ -106,7 +97,6 @@ const login = async (req, res) => {
       });
     }
 
-    // Comparar contraseñas
     const passOK = await bcrypt.compare(password, user.password);
     if (!passOK) {
       return res.status(401).json({
@@ -115,7 +105,6 @@ const login = async (req, res) => {
       });
     }
 
-    // Generar token JWT
     const token = jwt.sign(
       {
         id: user._id,
@@ -128,7 +117,6 @@ const login = async (req, res) => {
       { expiresIn: "8h" }
     );
 
-    // Respuesta exitosa
     return res.status(200).json({
       status: "success",
       message: "Login correcto",
@@ -185,19 +173,40 @@ const subirAvatar = async (req, res) => {
   }
 };
 
-
-
-// LISTAR USUARIOS (admin)
+// LISTAR USUARIOS (con incidencias activas)
 const listarUsuarios = async (req, res) => {
   try {
     const usuarios = await User.find()
       .select("-password")
-      .populate("area") // Mostrar datos del área
+      .populate("area")
       .sort({ creado_en: -1 });
+
+    const hoy = new Date();
+
+    const incidenciasActivas = await Incidencia.find({
+      fecha_inicio: { $lte: hoy },
+      fecha_fin: { $gte: hoy },
+    });
+
+    const incidenciasPorUsuario = {};
+    for (const inc of incidenciasActivas) {
+      if (!incidenciasPorUsuario[inc.usuario]) {
+        incidenciasPorUsuario[inc.usuario] = [];
+      }
+      incidenciasPorUsuario[inc.usuario].push(inc.tipo);
+    }
+
+    const usuariosConIncidencias = usuarios.map((usuario) => {
+      const usuarioObj = usuario.toObject();
+      usuarioObj.incidencias_activas = incidenciasPorUsuario[usuario._id] || [];
+      return usuarioObj;
+    });
 
     return res.status(200).json({
       status: "success",
-      usuarios,
+      message: "Listado general de usuarios.",
+      total: usuariosConIncidencias.length,
+      usuarios: usuariosConIncidencias,
     });
   } catch (error) {
     return res.status(500).json({
@@ -214,7 +223,6 @@ const editarUsuario = async (req, res) => {
     const { id } = req.params;
     const { nombre, apellidos, email, cargo, area, rol } = req.body;
 
-    // Validar área si se proporciona
     if (area) {
       const areaExiste = await Area.findById(area);
       if (!areaExiste) {
@@ -303,5 +311,5 @@ module.exports = {
   listarUsuarios,
   editarUsuario,
   eliminarUsuario,
-  subirAvatar 
+  subirAvatar
 };
