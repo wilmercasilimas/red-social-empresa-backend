@@ -5,6 +5,7 @@ const path = require("path");
 const User = require("../models/User");
 const Area = require("../models/Area");
 const Incidencia = require("../models/Incidencia"); // ✅ Añadido
+const { enviarCorreoRegistro } = require("../helpers/email");
 
 // REGISTRO DE EMPLEADO POR ADMIN
 const registrar = async (req, res) => {
@@ -59,6 +60,10 @@ const registrar = async (req, res) => {
     });
 
     const usuarioGuardado = await nuevoUsuario.save();
+
+    // Enviar correo con contraseña temporal
+    const { enviarCorreoRegistro } = require("../helpers/email");
+    await enviarCorreoRegistro(email.toLowerCase(), nombre, password);
 
     return res.status(201).json({
       status: "success",
@@ -311,5 +316,5 @@ module.exports = {
   listarUsuarios,
   editarUsuario,
   eliminarUsuario,
-  subirAvatar
+  subirAvatar,
 };

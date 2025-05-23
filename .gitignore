@@ -1,1 +1,30 @@
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# Directorios de producción o builds
+dist/
+build/
+
+# Variables de entorno
 .env
+.env.local
+.env.*.local
+
+# Archivos de subida (como avatares y publicaciones)
+uploads/avatars/
+uploads/publicaciones/
+
+# Editor / IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
