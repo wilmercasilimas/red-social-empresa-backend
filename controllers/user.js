@@ -135,7 +135,7 @@ return res.status(200).json({
     apellidos: user.apellidos, // ✅ Incluido también aquí
     email: user.email,
     cargo: user.cargo,
-    area: user.area,
+    area: user.area?.nombre || null,
     rol: user.rol,
   },
 });
