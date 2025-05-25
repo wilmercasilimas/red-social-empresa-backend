@@ -110,31 +110,35 @@ const login = async (req, res) => {
       });
     }
 
-    const token = jwt.sign(
-      {
-        id: user._id,
-        nombre: user.nombre,
-        email: user.email,
-        cargo: user.cargo,
-        rol: user.rol,
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: "8h" }
-    );
+const token = jwt.sign(
+  {
+    id: user._id,
+    nombre: user.nombre,
+    apellidos: user.apellidos, // ✅ Incluido en el token
+    email: user.email,
+    cargo: user.cargo,
+    area: user.area,
+    rol: user.rol,
+  },
+  process.env.JWT_SECRET,
+  { expiresIn: "8h" }
+);
 
-    return res.status(200).json({
-      status: "success",
-      message: "Login correcto",
-      token,
-      user: {
-        id: user._id,
-        nombre: user.nombre,
-        email: user.email,
-        cargo: user.cargo,
-        area: user.area,
-        rol: user.rol,
-      },
-    });
+return res.status(200).json({
+  status: "success",
+  message: "Login correcto",
+  token,
+  user: {
+    id: user._id,
+    nombre: user.nombre,
+    apellidos: user.apellidos, // ✅ Incluido también aquí
+    email: user.email,
+    cargo: user.cargo,
+    area: user.area,
+    rol: user.rol,
+  },
+});
+
   } catch (error) {
     console.error("❌ Error interno en login:", error);
     return res.status(500).json({
