@@ -22,7 +22,7 @@ app.use(express.urlencoded({ extended: true }));
 const userRoutes = require("./routes/user");
 // Servir archivos estáticos desde uploads/avatars
 app.use(
-  "/uploads/avatars",
+  "/api/avatar",
   express.static(path.join(__dirname, "uploads", "avatars"))
 );
 
