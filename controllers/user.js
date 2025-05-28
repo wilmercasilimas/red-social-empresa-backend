@@ -4,7 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const User = require("../models/User");
 const Area = require("../models/Area");
-const Incidencia = require("../models/Incidencia"); // ✅ Añadido
+const Incidencia = require("../models/Incidencia");
 const { enviarCorreoRegistro } = require("../helpers/email");
 
 // REGISTRO DE EMPLEADO POR ADMIN
@@ -61,8 +61,6 @@ const registrar = async (req, res) => {
 
     const usuarioGuardado = await nuevoUsuario.save();
 
-    // Enviar correo con contraseña temporal
-    const { enviarCorreoRegistro } = require("../helpers/email");
     await enviarCorreoRegistro(email.toLowerCase(), nombre, password);
 
     return res.status(201).json({
@@ -95,7 +93,6 @@ const login = async (req, res) => {
     const emailNormalizado = email.trim().toLowerCase();
     const user = await User.findOne({ email: emailNormalizado }).populate("area", "nombre");
 
-
     if (!user) {
       return res.status(404).json({
         status: "error",
@@ -111,35 +108,35 @@ const login = async (req, res) => {
       });
     }
 
-const token = jwt.sign(
-  {
-    id: user._id,
-    nombre: user.nombre,
-    apellidos: user.apellidos, // ✅ Incluido en el token
-    email: user.email,
-    cargo: user.cargo,
-    area: user.area,
-    rol: user.rol,
-  },
-  process.env.JWT_SECRET,
-  { expiresIn: "8h" }
-);
+    const token = jwt.sign(
+      {
+        id: user._id,
+        nombre: user.nombre,
+        apellidos: user.apellidos,
+        email: user.email,
+        cargo: user.cargo,
+        area: user.area,
+        rol: user.rol,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "8h" }
+    );
 
-return res.status(200).json({
-  status: "success",
-  message: "Login correcto",
-  token,
-  user: {
-    id: user._id,
-    nombre: user.nombre,
-    apellidos: user.apellidos, // ✅ Incluido también aquí
-    email: user.email,
-    cargo: user.cargo,
-    area: user.area?.nombre || null,
-    rol: user.rol,
-  },
-});
-
+    return res.status(200).json({
+      status: "success",
+      message: "Login correcto",
+      token,
+      user: {
+        id: user._id,
+        nombre: user.nombre,
+        apellidos: user.apellidos,
+        email: user.email,
+        cargo: user.cargo,
+        area: user.area?.nombre || null,
+        rol: user.rol,
+        imagen: user.imagen || "", // ✅ Agregado sin tocar lo demás
+      },
+    });
   } catch (error) {
     console.error("❌ Error interno en login:", error);
     return res.status(500).json({
