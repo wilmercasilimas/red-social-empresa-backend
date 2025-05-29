@@ -4,7 +4,7 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const path = require("path");
-
+const fileUpload = require("express-fileupload"); // ✅ nuevo
 
 dotenv.config(); // Carga variables de entorno desde .env
 
@@ -17,6 +17,12 @@ mongoose.set("strictPopulate", false); // ✅ Para evitar errores con populate
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// ✅ Habilitar subida de archivos con express-fileupload
+app.use(fileUpload({
+  useTempFiles: true,
+  tempFileDir: "/tmp/",
+}));
 
 // Rutas de usuario
 const userRoutes = require("./routes/user");
@@ -44,9 +50,9 @@ app.use("/api/tarea", tareaRoutes);
 const publicacionRoutes = require("./routes/publicacion");
 app.use("/api/publicacion", publicacionRoutes);
 
+// Rutas de incidencias
 const incidenciaRoutes = require("./routes/incidencia");
 app.use("/api/incidencia", incidenciaRoutes);
-
 
 // Ruta de prueba
 app.get("/", (req, res) => {

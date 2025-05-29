@@ -6,6 +6,14 @@ const User = require("../models/User");
 const Area = require("../models/Area");
 const Incidencia = require("../models/Incidencia");
 const { enviarCorreoRegistro } = require("../helpers/email");
+const cloudinary = require("cloudinary").v2;
+
+// Configuración de Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 // REGISTRO DE EMPLEADO POR ADMIN
 const registrar = async (req, res) => {
@@ -134,7 +142,7 @@ const login = async (req, res) => {
         cargo: user.cargo,
         area: user.area?.nombre || null,
         rol: user.rol,
-        imagen: user.imagen || "", // ✅ Agregado sin tocar lo demás
+        imagen: user.imagen || "",
       },
     });
   } catch (error) {
@@ -147,22 +155,26 @@ const login = async (req, res) => {
   }
 };
 
-// Subir imagen de avatar
-const subirAvatar = async (req, res) => {
+// SUBIR AVATAR CON CLOUDINARY
+const subirAvatarCloudinary = async (req, res) => {
   try {
-    if (!req.file) {
+    if (!req.files || !req.files.file0) {
       return res.status(400).json({
         status: "error",
         message: "No se ha subido ninguna imagen.",
       });
     }
 
+    const file = req.files.file0;
     const userId = req.user.id;
-    const archivo = req.file.filename;
+
+    const result = await cloudinary.uploader.upload(file.tempFilePath, {
+      folder: "avatars_empresa",
+    });
 
     const actualizado = await User.findByIdAndUpdate(
       userId,
-      { imagen: archivo },
+      { imagen: result.secure_url },
       { new: true }
     ).select("-password");
 
@@ -180,7 +192,7 @@ const subirAvatar = async (req, res) => {
   }
 };
 
-// LISTAR USUARIOS (con incidencias activas)
+// LISTAR USUARIOS (CON INCIDENCIAS ACTIVAS)
 const listarUsuarios = async (req, res) => {
   try {
     const usuarios = await User.find()
@@ -224,7 +236,7 @@ const listarUsuarios = async (req, res) => {
   }
 };
 
-// EDITAR USUARIO (admin)
+// EDITAR USUARIO (ADMIN)
 const editarUsuario = async (req, res) => {
   try {
     const { id } = req.params;
@@ -267,7 +279,7 @@ const editarUsuario = async (req, res) => {
   }
 };
 
-// ELIMINAR USUARIO (admin)
+// ELIMINAR USUARIO (ADMIN)
 const eliminarUsuario = async (req, res) => {
   try {
     const { id } = req.params;
@@ -318,5 +330,5 @@ module.exports = {
   listarUsuarios,
   editarUsuario,
   eliminarUsuario,
-  subirAvatar,
+  subirAvatarCloudinary,
 };
