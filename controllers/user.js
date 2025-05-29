@@ -15,6 +15,12 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const User = require("../models/User");
+const Area = require("../models/Area");
+const enviarCorreoRegistro = require("../helpers/enviarCorreoRegistro");
+
 // REGISTRO DE EMPLEADO POR ADMIN
 const registrar = async (req, res) => {
   try {
@@ -65,6 +71,7 @@ const registrar = async (req, res) => {
       cargo: cargo || "empleado",
       area: areaId || null,
       rol: rol || "empleado",
+      imagen: "default.png", // ✅ Avatar por defecto
     });
 
     const usuarioGuardado = await nuevoUsuario.save();
@@ -99,7 +106,10 @@ const login = async (req, res) => {
     }
 
     const emailNormalizado = email.trim().toLowerCase();
-    const user = await User.findOne({ email: emailNormalizado }).populate("area", "nombre");
+    const user = await User.findOne({ email: emailNormalizado }).populate(
+      "area",
+      "nombre"
+    );
 
     if (!user) {
       return res.status(404).json({
