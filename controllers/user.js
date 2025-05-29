@@ -2,11 +2,12 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const fs = require("fs");
 const path = require("path");
+const cloudinary = require("cloudinary").v2;
+
 const User = require("../models/User");
 const Area = require("../models/Area");
 const Incidencia = require("../models/Incidencia");
 const { enviarCorreoRegistro } = require("../helpers/email");
-const cloudinary = require("cloudinary").v2;
 
 // Configuración de Cloudinary
 cloudinary.config({
@@ -14,12 +15,6 @@ cloudinary.config({
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
-
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-const User = require("../models/User");
-const Area = require("../models/Area");
-const enviarCorreoRegistro = require("../helpers/enviarCorreoRegistro");
 
 // REGISTRO DE EMPLEADO POR ADMIN
 const registrar = async (req, res) => {
@@ -71,7 +66,7 @@ const registrar = async (req, res) => {
       cargo: cargo || "empleado",
       area: areaId || null,
       rol: rol || "empleado",
-      imagen: "default.png", // ✅ Avatar por defecto
+      imagen: "default.png",
     });
 
     const usuarioGuardado = await nuevoUsuario.save();
@@ -106,10 +101,7 @@ const login = async (req, res) => {
     }
 
     const emailNormalizado = email.trim().toLowerCase();
-    const user = await User.findOne({ email: emailNormalizado }).populate(
-      "area",
-      "nombre"
-    );
+    const user = await User.findOne({ email: emailNormalizado }).populate("area", "nombre");
 
     if (!user) {
       return res.status(404).json({
@@ -202,7 +194,7 @@ const subirAvatarCloudinary = async (req, res) => {
   }
 };
 
-// LISTAR USUARIOS (CON INCIDENCIAS ACTIVAS)
+// LISTAR USUARIOS
 const listarUsuarios = async (req, res) => {
   try {
     const usuarios = await User.find()
