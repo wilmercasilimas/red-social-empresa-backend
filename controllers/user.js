@@ -8,6 +8,7 @@ const User = require("../models/User");
 const Area = require("../models/Area");
 const Incidencia = require("../models/Incidencia");
 const { enviarCorreoRegistro } = require("../helpers/email");
+const { getAvatarUrl } = require("../helpers/getAvatarUrl");
 
 // Configuración de Cloudinary
 cloudinary.config({
@@ -89,16 +90,10 @@ const registrar = async (req, res) => {
 };
 
 // LOGIN
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-const User = require("../models/User");
-const { getAvatarUrl } = require("../helpers/getAvatarUrl");
-
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Validar datos
     if (!email || !password) {
       return res.status(400).json({
         status: "error",
@@ -107,8 +102,6 @@ const login = async (req, res) => {
     }
 
     const emailNormalizado = email.trim().toLowerCase();
-
-    // Buscar usuario
     const user = await User.findOne({ email: emailNormalizado }).populate("area", "nombre");
 
     if (!user) {
@@ -118,7 +111,6 @@ const login = async (req, res) => {
       });
     }
 
-    // Verificar contraseña
     const passOK = await bcrypt.compare(password, user.password);
     if (!passOK) {
       return res.status(401).json({
@@ -127,7 +119,6 @@ const login = async (req, res) => {
       });
     }
 
-    // Generar token
     const token = jwt.sign(
       {
         id: user._id,
@@ -142,13 +133,11 @@ const login = async (req, res) => {
       { expiresIn: "8h" }
     );
 
-    // Limpiar imagen solo si no es una URL válida
     const imagen =
       user.imagen && /^https?:\/\//i.test(user.imagen)
         ? user.imagen
         : getAvatarUrl(user.imagen);
 
-    // Enviar respuesta final
     return res.status(200).json({
       status: "success",
       message: "Login correcto",
@@ -161,7 +150,7 @@ const login = async (req, res) => {
         cargo: user.cargo,
         area: user.area?.nombre || null,
         rol: user.rol,
-        imagen, // ✅ limpio y seguro
+        imagen,
       },
     });
   } catch (error) {
@@ -173,7 +162,6 @@ const login = async (req, res) => {
     });
   }
 };
-
 
 // SUBIR AVATAR CON CLOUDINARY
 const subirAvatarCloudinary = async (req, res) => {
