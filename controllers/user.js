@@ -102,7 +102,10 @@ const login = async (req, res) => {
     }
 
     const emailNormalizado = email.trim().toLowerCase();
-    const user = await User.findOne({ email: emailNormalizado }).populate("area", "nombre");
+    const user = await User.findOne({ email: emailNormalizado }).populate(
+      "area",
+      "nombre"
+    );
 
     if (!user) {
       return res.status(404).json({
