@@ -133,10 +133,14 @@ const login = async (req, res) => {
       { expiresIn: "8h" }
     );
 
-    const imagen =
-      user.imagen && /^https?:\/\//i.test(user.imagen)
-        ? user.imagen
-        : getAvatarUrl(user.imagen);
+    let imagenFinal = user.imagen || "";
+    if (
+      imagenFinal &&
+      !imagenFinal.startsWith("http://") &&
+      !imagenFinal.startsWith("https://")
+    ) {
+      imagenFinal = getAvatarUrl(imagenFinal);
+    }
 
     return res.status(200).json({
       status: "success",
@@ -150,7 +154,7 @@ const login = async (req, res) => {
         cargo: user.cargo,
         area: user.area?.nombre || null,
         rol: user.rol,
-        imagen,
+        imagen: imagenFinal,
       },
     });
   } catch (error) {
