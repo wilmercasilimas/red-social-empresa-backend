@@ -7,6 +7,7 @@ const {
   listarAreas,
   eliminarArea,
   detalleArea,
+  editarArea,
 } = require("../controllers/area");
 
 // ✅ Middleware de autenticación y verificación de rol
@@ -23,5 +24,8 @@ router.delete("/eliminar/:id", auth, esAdmin, eliminarArea);
 
 // ✅ Obtener detalle de un área con sus empleados (solo admin)
 router.get("/detalle/:id", auth, esAdmin, detalleArea);
+
+// ✅ Actualizar un área por ID (solo admin)
+router.put("/editar/:id", auth, esAdmin, editarArea);
 
 module.exports = router;

@@ -118,9 +118,51 @@ const eliminarArea = async (req, res) => {
   }
 };
 
+// Editar un área
+const editarArea = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { nombre, descripcion } = req.body;
+
+    if (!nombre) {
+      return res.status(400).json({
+        status: "error",
+        message: "El nombre del área es obligatorio.",
+      });
+    }
+
+    const areaActualizada = await Area.findByIdAndUpdate(
+      id,
+      { nombre: nombre.trim(), descripcion },
+      { new: true }
+    );
+
+    if (!areaActualizada) {
+      return res.status(404).json({
+        status: "error",
+        message: "Área no encontrada.",
+      });
+    }
+
+    return res.status(200).json({
+      status: "success",
+      message: "Área actualizada correctamente.",
+      area: areaActualizada,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      status: "error",
+      message: "Error al actualizar el área.",
+      error: error.message,
+    });
+  }
+};
+
+
 module.exports = {
   crearArea,
   listarAreas,
   eliminarArea,
-  detalleArea
+  detalleArea,
+  editarArea,
 };
