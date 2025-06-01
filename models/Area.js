@@ -1,3 +1,4 @@
+// ✅ models/Area.js
 const { Schema, model } = require("mongoose");
 
 const AreaSchema = Schema({
@@ -14,6 +15,10 @@ const AreaSchema = Schema({
   creado_en: {
     type: Date,
     default: Date.now
+  },
+  activa: {
+    type: Boolean,
+    default: true
   }
 });
 

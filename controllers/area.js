@@ -1,10 +1,11 @@
+// ✅ controllers/area.js
 const Area = require("../models/Area");
 const User = require("../models/User");
 
 // Crear nueva área
 const crearArea = async (req, res) => {
   try {
-    const { nombre, descripcion } = req.body;
+    const { nombre, descripcion, activa } = req.body;
 
     if (!nombre) {
       return res.status(400).json({
@@ -21,7 +22,11 @@ const crearArea = async (req, res) => {
       });
     }
 
-    const nuevaArea = new Area({ nombre: nombre.trim(), descripcion });
+    const nuevaArea = new Area({
+      nombre: nombre.trim(),
+      descripcion,
+      activa: activa !== undefined ? activa : true
+    });
 
     const areaGuardada = await nuevaArea.save();
 
@@ -122,47 +127,46 @@ const eliminarArea = async (req, res) => {
 const editarArea = async (req, res) => {
   try {
     const { id } = req.params;
-    const { nombre, descripcion } = req.body;
+    const { nombre, descripcion, activa } = req.body;
 
     if (!nombre) {
       return res.status(400).json({
         status: "error",
-        message: "El nombre del área es obligatorio.",
+        message: "El nombre del área es obligatorio."
       });
     }
 
     const areaActualizada = await Area.findByIdAndUpdate(
       id,
-      { nombre: nombre.trim(), descripcion },
+      { nombre: nombre.trim(), descripcion, activa },
       { new: true }
     );
 
     if (!areaActualizada) {
       return res.status(404).json({
         status: "error",
-        message: "Área no encontrada.",
+        message: "Área no encontrada."
       });
     }
 
     return res.status(200).json({
       status: "success",
       message: "Área actualizada correctamente.",
-      area: areaActualizada,
+      area: areaActualizada
     });
   } catch (error) {
     return res.status(500).json({
       status: "error",
       message: "Error al actualizar el área.",
-      error: error.message,
+      error: error.message
     });
   }
 };
-
 
 module.exports = {
   crearArea,
   listarAreas,
   eliminarArea,
   detalleArea,
-  editarArea,
+  editarArea
 };
