@@ -20,7 +20,7 @@ cloudinary.config({
 // REGISTRO DE EMPLEADO POR ADMIN
 const registrar = async (req, res) => {
   try {
-    const { nombre, apellidos, email, password, cargo, area, rol } = req.body;
+    const { nombre, apellidos, email, password, cargo, area, rol, activo, fecha_ingreso } = req.body;
 
     if (!nombre || !email || !password) {
       return res.status(400).json({
@@ -68,6 +68,8 @@ const registrar = async (req, res) => {
       area: areaId || null,
       rol: rol || "empleado",
       imagen: "default.png",
+      activo,
+      fecha_ingreso: fecha_ingreso || new Date(),
     });
 
     const usuarioGuardado = await nuevoUsuario.save();
@@ -255,8 +257,18 @@ const listarUsuarios = async (req, res) => {
 const editarUsuario = async (req, res) => {
   try {
     const { id } = req.params;
-    const { nombre, apellidos, email, cargo, area, rol } = req.body;
+    const {
+      nombre,
+      apellidos,
+      email,
+      cargo,
+      area,
+      rol,
+      activo,
+      fecha_ingreso,
+    } = req.body;
 
+    // Validar área si viene incluida
     if (area) {
       const areaExiste = await Area.findById(area);
       if (!areaExiste) {
@@ -267,11 +279,20 @@ const editarUsuario = async (req, res) => {
       }
     }
 
-    const actualizado = await User.findByIdAndUpdate(
-      id,
-      { nombre, apellidos, email, cargo, area, rol },
-      { new: true }
-    );
+    // Construir el objeto de actualización solo con campos presentes
+    const camposActualizados = {};
+    if (nombre !== undefined) camposActualizados.nombre = nombre;
+    if (apellidos !== undefined) camposActualizados.apellidos = apellidos;
+    if (email !== undefined) camposActualizados.email = email;
+    if (cargo !== undefined) camposActualizados.cargo = cargo;
+    if (area !== undefined) camposActualizados.area = area;
+    if (rol !== undefined) camposActualizados.rol = rol;
+    if (activo !== undefined) camposActualizados.activo = activo;
+    if (fecha_ingreso !== undefined) camposActualizados.fecha_ingreso = fecha_ingreso;
+
+    const actualizado = await User.findByIdAndUpdate(id, camposActualizados, {
+      new: true,
+    });
 
     if (!actualizado) {
       return res.status(404).json({
@@ -293,6 +314,7 @@ const editarUsuario = async (req, res) => {
     });
   }
 };
+
 
 // ELIMINAR USUARIO (ADMIN)
 const eliminarUsuario = async (req, res) => {
