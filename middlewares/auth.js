@@ -29,7 +29,7 @@ const auth = (req, res, next) => {
 };
 
 /**
- * Middleware: Verifica si el usuario autenticado tiene rol 'admin'.
+ * Middleware: Verifica si el usuario tiene rol 'admin'.
  */
 const esAdmin = (req, res, next) => {
   if (!req.user || req.user.rol !== "admin") {
@@ -41,7 +41,21 @@ const esAdmin = (req, res, next) => {
   next();
 };
 
+/**
+ * Middleware: Permite acceso a 'admin' o 'gerente'
+ */
+const esAdminOGerencia = (req, res, next) => {
+  if (!req.user || !["admin", "gerente"].includes(req.user.rol)) {
+    return res.status(403).json({
+      status: "error",
+      message: "Acceso denegado. Solo administradores o gerencia pueden realizar esta acción.",
+    });
+  }
+  next();
+};
+
 module.exports = {
   auth,
   esAdmin,
+  esAdminOGerencia,
 };
