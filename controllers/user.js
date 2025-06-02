@@ -234,22 +234,34 @@ const listarUsuarios = async (req, res) => {
       fecha_fin: { $gte: hoy },
     });
 
+    // Agrupar incidencias activas por usuario
     const incidenciasPorUsuario = {};
     for (const inc of incidenciasActivas) {
       if (!incidenciasPorUsuario[inc.usuario]) {
         incidenciasPorUsuario[inc.usuario] = [];
       }
-      incidenciasPorUsuario[inc.usuario].push(inc.tipo);
+      incidenciasPorUsuario[inc.usuario].push(inc);
     }
 
-    const usuariosConIncidencias = usuarios.map((usuario) => {
+    // Armar respuesta
+    const usuariosConEstado = usuarios.map((usuario) => {
       const usuarioObj = usuario.toObject();
 
-      usuarioObj.incidencias_activas = incidenciasPorUsuario[usuario._id] || [];
+      const incidencias = incidenciasPorUsuario[usuario._id] || [];
 
-      // Garantizar presencia de los campos nuevos aunque estén vacíos
-      usuarioObj.activo = usuario.activo ?? false;
-      usuarioObj.fecha_ingreso = usuario.fecha_ingreso ?? null;
+      usuarioObj.incidencias_activas = incidencias.map((i) => ({
+        tipo: i.tipo,
+        fecha_inicio: i.fecha_inicio,
+        fecha_fin: i.fecha_fin,
+      }));
+
+      // Determinar estado real
+      usuarioObj.activo = incidencias.length === 0 ? usuario.activo : false;
+
+      // Incluir detalle si está inactivo por incidencia
+      if (incidencias.length > 0) {
+        usuarioObj.motivo_inactivo = incidencias[0]; // Puedes mostrar solo la más reciente
+      }
 
       return usuarioObj;
     });
@@ -257,8 +269,8 @@ const listarUsuarios = async (req, res) => {
     return res.status(200).json({
       status: "success",
       message: "Listado general de usuarios.",
-      total: usuariosConIncidencias.length,
-      usuarios: usuariosConIncidencias,
+      total: usuariosConEstado.length,
+      usuarios: usuariosConEstado,
     });
   } catch (error) {
     return res.status(500).json({
@@ -268,6 +280,7 @@ const listarUsuarios = async (req, res) => {
     });
   }
 };
+
 
 // EDITAR USUARIO (ADMIN)
 const editarUsuario = async (req, res) => {
