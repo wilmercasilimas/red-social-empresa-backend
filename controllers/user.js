@@ -20,7 +20,17 @@ cloudinary.config({
 // REGISTRO DE EMPLEADO POR ADMIN
 const registrar = async (req, res) => {
   try {
-    const { nombre, apellidos, email, password, cargo, area, rol, activo, fecha_ingreso } = req.body;
+    const {
+      nombre,
+      apellidos,
+      email,
+      password,
+      cargo,
+      area,
+      rol,
+      activo,
+      fecha_ingreso,
+    } = req.body;
 
     if (!nombre || !email || !password) {
       return res.status(400).json({
@@ -259,7 +269,6 @@ const listarUsuarios = async (req, res) => {
   }
 };
 
-
 // EDITAR USUARIO (ADMIN)
 const editarUsuario = async (req, res) => {
   try {
@@ -295,7 +304,8 @@ const editarUsuario = async (req, res) => {
     if (area !== undefined) camposActualizados.area = area;
     if (rol !== undefined) camposActualizados.rol = rol;
     if (activo !== undefined) camposActualizados.activo = activo;
-    if (fecha_ingreso !== undefined) camposActualizados.fecha_ingreso = fecha_ingreso;
+    if (fecha_ingreso !== undefined)
+      camposActualizados.fecha_ingreso = fecha_ingreso;
 
     const actualizado = await User.findByIdAndUpdate(id, camposActualizados, {
       new: true,
@@ -321,7 +331,6 @@ const editarUsuario = async (req, res) => {
     });
   }
 };
-
 
 // ELIMINAR USUARIO (ADMIN)
 const eliminarUsuario = async (req, res) => {

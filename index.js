@@ -32,6 +32,11 @@ app.use(
   express.static(path.join(__dirname, "uploads", "avatars"))
 );
 
+app.get("/api/avatar/default.png", (req, res) => {
+  res.redirect(process.env.DEFAULT_AVATAR_URL);
+});
+
+
 app.use("/api/user", userRoutes);
 
 // Rutas de área
