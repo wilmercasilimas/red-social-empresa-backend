@@ -27,7 +27,7 @@ const UserSchema = new Schema({
     default: "empleado",
   },
   area: {
-    type: Types.ObjectId, // Referencia a una colección externa
+    type: Types.ObjectId,
     ref: "Area",
     default: null,
   },
@@ -41,6 +41,14 @@ const UserSchema = new Schema({
     default: "default.png",
   },
   creado_en: {
+    type: Date,
+    default: Date.now,
+  },
+  activo: {
+    type: Boolean,
+    default: true,
+  },
+  fecha_ingreso: {
     type: Date,
     default: Date.now,
   },

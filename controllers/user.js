@@ -234,7 +234,13 @@ const listarUsuarios = async (req, res) => {
 
     const usuariosConIncidencias = usuarios.map((usuario) => {
       const usuarioObj = usuario.toObject();
+
       usuarioObj.incidencias_activas = incidenciasPorUsuario[usuario._id] || [];
+
+      // Garantizar presencia de los campos nuevos aunque estén vacíos
+      usuarioObj.activo = usuario.activo ?? false;
+      usuarioObj.fecha_ingreso = usuario.fecha_ingreso ?? null;
+
       return usuarioObj;
     });
 
@@ -252,6 +258,7 @@ const listarUsuarios = async (req, res) => {
     });
   }
 };
+
 
 // EDITAR USUARIO (ADMIN)
 const editarUsuario = async (req, res) => {
