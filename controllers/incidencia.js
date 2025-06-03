@@ -7,7 +7,6 @@ const crearIncidencia = async (req, res) => {
   try {
     const { tipo, descripcion, usuario, fecha_inicio, fecha_fin } = req.body;
 
-    // Validar campos obligatorios
     if (!tipo || !usuario || !fecha_inicio || !fecha_fin) {
       return res.status(400).json({
         status: "error",
@@ -15,7 +14,6 @@ const crearIncidencia = async (req, res) => {
       });
     }
 
-    // Verificar si el usuario destino existe
     const empleado = await User.findById(usuario);
     if (!empleado) {
       return res.status(404).json({
@@ -24,7 +22,6 @@ const crearIncidencia = async (req, res) => {
       });
     }
 
-    // Crear y guardar incidencia
     const nuevaIncidencia = new Incidencia({
       tipo,
       descripcion,
@@ -129,7 +126,6 @@ const obtenerIncidenciasPorUsuario = async (req, res) => {
 const listarIncidenciasActivas = async (req, res) => {
   try {
     const hoy = new Date();
-    console.log("📌 Fecha actual del servidor:", hoy);
 
     const incidencias = await Incidencia.find({
       fecha_inicio: { $lte: hoy },
@@ -152,8 +148,6 @@ const listarIncidenciasActivas = async (req, res) => {
     });
   }
 };
-
-
 
 module.exports = {
   crearIncidencia,
