@@ -129,7 +129,7 @@ const obtenerIncidenciasPorUsuario = async (req, res) => {
 const listarIncidenciasActivas = async (req, res) => {
   try {
     const hoy = new Date();
-    console.log("📌 Fecha actual del servidor:", now);
+    console.log("📌 Fecha actual del servidor:", hoy);
 
     const incidencias = await Incidencia.find({
       fecha_inicio: { $lte: hoy },
@@ -144,6 +144,7 @@ const listarIncidenciasActivas = async (req, res) => {
       incidencias,
     });
   } catch (error) {
+    console.error("❌ Error al listar incidencias activas:", error);
     return res.status(500).json({
       status: "error",
       message: "Error al obtener incidencias activas.",
