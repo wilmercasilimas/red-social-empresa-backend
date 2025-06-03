@@ -1,4 +1,3 @@
-// controllers/incidencia.js
 const Incidencia = require("../models/Incidencia");
 const User = require("../models/User");
 
@@ -125,12 +124,11 @@ const obtenerIncidenciasPorUsuario = async (req, res) => {
 // Listar incidencias activas
 const listarIncidenciasActivas = async (req, res) => {
   try {
-    const hoy = new Date();
-    hoy.setUTCHours(0, 0, 0, 0);
+    const ahora = new Date(); // 🟢 Comparación directa sin truncar UTC
 
     const incidencias = await Incidencia.find({
-      fecha_inicio: { $lte: hoy },
-      fecha_fin: { $gte: hoy },
+      fecha_inicio: { $lte: ahora },
+      fecha_fin: { $gte: ahora },
     })
       .populate("usuario", "nombre apellidos email cargo area imagen")
       .populate("asignada_por", "nombre apellidos email");
