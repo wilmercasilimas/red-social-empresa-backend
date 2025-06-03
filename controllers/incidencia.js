@@ -129,6 +129,7 @@ const obtenerIncidenciasPorUsuario = async (req, res) => {
 const listarIncidenciasActivas = async (req, res) => {
   try {
     const hoy = new Date();
+    console.log("📌 Fecha actual del servidor:", now);
 
     const incidencias = await Incidencia.find({
       fecha_inicio: { $lte: hoy },
