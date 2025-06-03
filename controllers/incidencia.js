@@ -126,13 +126,14 @@ const obtenerIncidenciasPorUsuario = async (req, res) => {
 const listarIncidenciasActivas = async (req, res) => {
   try {
     const hoy = new Date();
+    hoy.setUTCHours(0, 0, 0, 0);
 
     const incidencias = await Incidencia.find({
       fecha_inicio: { $lte: hoy },
-      fecha_fin: { $gte: hoy }
+      fecha_fin: { $gte: hoy },
     })
-    .populate("usuario", "nombre apellidos email cargo area imagen")
-    .populate("asignada_por", "nombre apellidos email");
+      .populate("usuario", "nombre apellidos email cargo area imagen")
+      .populate("asignada_por", "nombre apellidos email");
 
     return res.status(200).json({
       status: "success",
