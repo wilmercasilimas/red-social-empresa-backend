@@ -7,6 +7,8 @@ const crearPublicacion = async (req, res) => {
   try {
     const { texto, tarea } = req.body;
 
+    console.log("🧪 req.user:", req.user);
+
     if (!texto || !tarea) {
       return res.status(400).json({
         status: "error",
