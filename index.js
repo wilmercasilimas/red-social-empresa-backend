@@ -3,7 +3,6 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const path = require("path");
-const fileUpload = require("express-fileupload"); // ✅ nuevo
 
 dotenv.config(); // Carga variables de entorno desde .env
 
@@ -12,7 +11,7 @@ const app = express();
 // Configuración global de Mongoose
 mongoose.set("strictPopulate", false); // ✅ Para evitar errores con populate
 
-// ✅ CORS configurado para frontend local
+// CORS configurado para desarrollo local
 const corsOptions = {
   origin: ["http://localhost:5173"],
   credentials: true,
@@ -23,48 +22,36 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ✅ Habilitar subida de archivos con express-fileupload
-app.use(
-  fileUpload({
-    useTempFiles: true,
-    tempFileDir: "/tmp/",
-  })
-);
-
-// Rutas de usuario
-const userRoutes = require("./routes/user");
-// Servir archivos estáticos desde uploads/avatars
+// ✅ Servir archivos estáticos desde uploads/avatars
 app.use(
   "/api/avatar",
   express.static(path.join(__dirname, "uploads", "avatars"))
 );
 
+// ✅ Redirección para imagen por defecto
 app.get("/api/avatar/default.png", (req, res) => {
   res.redirect(process.env.DEFAULT_AVATAR_URL);
 });
+
+// Rutas
+const userRoutes = require("./routes/user");
 app.use("/api/user", userRoutes);
 
-// Rutas de área
 const areaRoutes = require("./routes/area");
 app.use("/api/area", areaRoutes);
 
-// Rutas de cargo
 const cargoRoutes = require("./routes/cargo");
 app.use("/api/cargo", cargoRoutes);
 
-// Rutas de tareas
 const tareaRoutes = require("./routes/tarea");
 app.use("/api/tarea", tareaRoutes);
 
-// Rutas de publicaciones
 const publicacionRoutes = require("./routes/publicacion");
 app.use("/api/publicacion", publicacionRoutes);
 
-// Rutas de comentarios
 const comentarioRoutes = require("./routes/comentario");
 app.use("/api/comentario", comentarioRoutes);
 
-// Rutas de incidencias
 const incidenciaRoutes = require("./routes/incidencia");
 app.use("/api/incidencia", incidenciaRoutes);
 
@@ -75,7 +62,7 @@ app.get("/", (req, res) => {
   });
 });
 
-// Conexión a MongoDB (simplificada para Mongoose moderno)
+// Conexión a MongoDB
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
