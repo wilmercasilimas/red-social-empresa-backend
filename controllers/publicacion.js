@@ -23,6 +23,24 @@ const crearPublicacion = async (req, res) => {
     });
 
     if (req.file) {
+      // Validar tipo de imagen
+      const tiposPermitidos = ["image/jpeg", "image/png", "image/jpg", "image/webp"];
+      if (!tiposPermitidos.includes(req.file.mimetype)) {
+        return res.status(400).json({
+          status: "error",
+          message: "Formato de imagen no permitido. Usa JPG, PNG o WEBP.",
+        });
+      }
+
+      // Validar tamaño máximo
+      const maxSizeMB = 2;
+      if (req.file.size > maxSizeMB * 1024 * 1024) {
+        return res.status(400).json({
+          status: "error",
+          message: `La imagen supera el tamaño máximo de ${maxSizeMB} MB.`,
+        });
+      }
+
       nueva.imagen = req.file.filename;
     }
 
