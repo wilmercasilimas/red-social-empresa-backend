@@ -6,10 +6,8 @@ const { subirImagenPublicacion } = require("../helpers/cloudinary");
 // Crear nueva publicación
 const crearPublicacion = async (req, res) => {
   try {
-    // 🔍 Logs de depuración
-    console.log("📥 BODY:", req.body);
-    console.log("📎 FILE:", req.file);
-    const { texto, tarea } = req.body;
+    const texto = req.body.texto?.trim();
+    const tarea = req.body.tarea?.trim();
     const autor = req.user.id;
 
     if (!texto || !tarea) {
@@ -53,10 +51,12 @@ const crearPublicacion = async (req, res) => {
     });
   }
 };
+
 // Editar publicación existente
 const editarPublicacion = async (req, res) => {
   try {
-    const { texto, tarea } = req.body;
+    const texto = req.body.texto?.trim();
+    const tarea = req.body.tarea?.trim();
     const publicacionId = req.params.id;
     const usuarioId = req.user.id;
     const esAdmin = req.user.rol === "admin";
