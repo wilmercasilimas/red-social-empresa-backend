@@ -6,6 +6,9 @@ const { subirImagenPublicacion } = require("../helpers/cloudinary");
 // Crear nueva publicación
 const crearPublicacion = async (req, res) => {
   try {
+    // 🔍 Logs de depuración
+    console.log("📥 BODY:", req.body);
+    console.log("📎 FILE:", req.file);
     const { texto, tarea } = req.body;
     const autor = req.user.id;
 
