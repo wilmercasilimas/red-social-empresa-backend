@@ -7,6 +7,8 @@ const crearPublicacion = async (req, res) => {
   try {
     const { texto, tarea } = req.body;
 
+    console.log("🧪 req.body:", req.body);
+    console.log("🧪 req.file:", req.file);
     console.log("🧪 req.user:", req.user);
 
     if (!texto || !tarea) {
@@ -52,6 +54,7 @@ const crearPublicacion = async (req, res) => {
       publicacion: guardada,
     });
   } catch (error) {
+    console.error("❌ Error interno en crearPublicacion:", error);
     return res.status(500).json({
       status: "error",
       message: "Error al crear publicación.",
