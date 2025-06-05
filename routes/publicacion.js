@@ -1,22 +1,10 @@
 const express = require("express");
 const router = express.Router();
-const multer = require("multer");
-const path = require("path");
+const upload = require("../middlewares/multer"); // ✅ Usa el middleware oficial
 const { auth } = require("../middlewares/auth");
 const PublicacionController = require("../controllers/publicacion");
 
-// Configuración de subida de imágenes
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "./uploads/publicaciones");
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + "-" + file.originalname);
-  },
-});
-const upload = multer({ storage });
-
-// Crear publicación (con imagen)
+// Crear publicación (con imagen opcional)
 router.post(
   "/crear",
   upload.single("imagen"),
