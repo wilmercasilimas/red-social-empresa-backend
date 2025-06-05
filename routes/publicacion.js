@@ -24,6 +24,24 @@ router.post(
   PublicacionController.crearPublicacion
 );
 
+// Ruta temporal para depurar subida de archivos sin auth
+router.post(
+  "/debug-upload",
+  upload.single("imagen"),
+  (req, res) => {
+    console.log("🧪 DEBUG req.headers['content-type']:", req.headers["content-type"]);
+    console.log("🧪 DEBUG req.body:", req.body);
+    console.log("🧪 DEBUG req.file:", req.file);
+
+    return res.status(200).json({
+      status: "debug",
+      body: req.body,
+      file: req.file,
+    });
+  }
+);
+
+
 
 // Listar publicaciones del usuario autenticado
 router.get("/mis-publicaciones", auth, PublicacionController.misPublicaciones);
