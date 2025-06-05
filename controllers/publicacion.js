@@ -12,16 +12,20 @@ const crearPublicacion = async (req, res) => {
     if (!texto || !tarea) {
       return res.status(400).json({
         status: "error",
-        message: "Faltan datos obligatorios.",
+        message: "Los campos 'texto' y 'tarea' son obligatorios.",
       });
     }
 
     let imagenUrl = null;
 
     if (req.file) {
-      const localPath = path.join(__dirname, "../uploads/publicaciones/", req.file.filename);
-      imagenUrl = await subirImagenPublicacion(localPath);
-      fs.unlinkSync(localPath);
+      try {
+        const localPath = path.join(__dirname, "../uploads/publicaciones", req.file.filename);
+        imagenUrl = await subirImagenPublicacion(localPath);
+        fs.unlinkSync(localPath);
+      } catch (error) {
+        console.error("❌ Error al subir imagen a Cloudinary:", error);
+      }
     }
 
     const nuevaPublicacion = new Publicacion({
@@ -39,13 +43,13 @@ const crearPublicacion = async (req, res) => {
       publicacion: nuevaPublicacion,
     });
   } catch (error) {
+    console.error("❌ Error interno en crearPublicacion:", error);
     return res.status(500).json({
       status: "error",
-      message: "Error al crear la publicación.",
+      message: "Error interno al crear la publicación.",
     });
   }
 };
-
 // Editar publicación existente
 const editarPublicacion = async (req, res) => {
   try {
