@@ -21,8 +21,7 @@ const crearPublicacion = async (req, res) => {
 
     if (req.files && req.files.length > 0) {
       const archivo = req.files[0];
-      const tempPath = path.join(__dirname, "../uploads/publicaciones", archivo.originalname);
-      fs.writeFileSync(tempPath, archivo.buffer);
+      const tempPath = archivo.path;
 
       try {
         imagenUrl = await subirImagenPublicacion(tempPath);
@@ -91,8 +90,7 @@ const editarPublicacion = async (req, res) => {
 
     if (req.files && req.files.length > 0) {
       const archivo = req.files[0];
-      const tempPath = path.join(__dirname, "../uploads/publicaciones", archivo.originalname);
-      fs.writeFileSync(tempPath, archivo.buffer);
+      const tempPath = archivo.path;
 
       try {
         imagenUrl = await subirImagenPublicacion(tempPath);
