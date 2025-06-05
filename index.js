@@ -1,4 +1,3 @@
-// index.js
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
@@ -13,8 +12,14 @@ const app = express();
 // Configuración global de Mongoose
 mongoose.set("strictPopulate", false); // ✅ Para evitar errores con populate
 
-// Middlewares
-app.use(cors());
+// ✅ CORS configurado para frontend local
+const corsOptions = {
+  origin: ["http://localhost:5173"],
+  credentials: true,
+};
+app.use(cors(corsOptions));
+
+// Middlewares básicos
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -37,7 +42,6 @@ app.use(
 app.get("/api/avatar/default.png", (req, res) => {
   res.redirect(process.env.DEFAULT_AVATAR_URL);
 });
-
 app.use("/api/user", userRoutes);
 
 // Rutas de área
