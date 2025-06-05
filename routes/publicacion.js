@@ -20,10 +20,10 @@ const upload = multer({ storage });
 // Crear publicación (con imagen opcional)
 router.post(
   "/crear",
-  upload.single("imagen"), // ✅ primero multer
-  auth,                    // ✅ después el middleware de autenticación
+  upload.single("imagen"),
   PublicacionController.crearPublicacion
 );
+
 
 // Listar publicaciones del usuario autenticado
 router.get("/mis-publicaciones", auth, PublicacionController.misPublicaciones);

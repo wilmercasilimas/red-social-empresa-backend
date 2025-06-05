@@ -1,15 +1,30 @@
 const Publicacion = require("../models/Publicacion");
 const fs = require("fs");
 const path = require("path");
+const jwt = require("jsonwebtoken");
+
 
 // Crear publicación con o sin imagen
 const crearPublicacion = async (req, res) => {
   try {
-    const { texto, tarea } = req.body;
+    // ✅ Verificación manual del token
+    const token = req.header("Authorization");
+
+    if (!token) {
+      return res.status(401).json({
+        status: "error",
+        message: "Token no proporcionado.",
+      });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
 
     console.log("🧪 req.body:", req.body);
     console.log("🧪 req.file:", req.file);
     console.log("🧪 req.user:", req.user);
+
+    const { texto, tarea } = req.body;
 
     if (!texto || !tarea) {
       return res.status(400).json({
@@ -25,7 +40,6 @@ const crearPublicacion = async (req, res) => {
     });
 
     if (req.file) {
-      // Validar tipo de imagen
       const tiposPermitidos = ["image/jpeg", "image/png", "image/jpg", "image/webp"];
       if (!tiposPermitidos.includes(req.file.mimetype)) {
         return res.status(400).json({
@@ -34,7 +48,6 @@ const crearPublicacion = async (req, res) => {
         });
       }
 
-      // Validar tamaño máximo
       const maxSizeMB = 2;
       if (req.file.size > maxSizeMB * 1024 * 1024) {
         return res.status(400).json({
