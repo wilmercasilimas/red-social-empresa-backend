@@ -5,9 +5,11 @@ const jwt = require("jsonwebtoken");
 
 
 // Crear publicación con o sin imagen
+const jwt = require("jsonwebtoken");
+const Publicacion = require("../models/Publicacion");
+
 const crearPublicacion = async (req, res) => {
   try {
-    // ✅ Verificación manual del token
     const token = req.header("Authorization");
 
     if (!token) {
@@ -19,10 +21,6 @@ const crearPublicacion = async (req, res) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
-
-    console.log("🧪 req.body:", req.body);
-    console.log("🧪 req.file:", req.file);
-    console.log("🧪 req.user:", req.user);
 
     const { texto, tarea } = req.body;
 
@@ -75,6 +73,9 @@ const crearPublicacion = async (req, res) => {
     });
   }
 };
+
+module.exports = { crearPublicacion };
+
 
 // Publicaciones propias
 const misPublicaciones = async (req, res) => {
