@@ -19,11 +19,14 @@ const crearPublicacion = async (req, res) => {
 
     let imagenUrl = null;
 
-    if (req.file) {
+    if (req.files && req.files.length > 0) {
+      const archivo = req.files[0];
+      const tempPath = path.join(__dirname, "../uploads/publicaciones", archivo.originalname);
+      fs.writeFileSync(tempPath, archivo.buffer);
+
       try {
-        const localPath = path.join(__dirname, "../uploads/publicaciones", req.file.filename);
-        imagenUrl = await subirImagenPublicacion(localPath);
-        fs.unlinkSync(localPath);
+        imagenUrl = await subirImagenPublicacion(tempPath);
+        fs.unlinkSync(tempPath);
       } catch (error) {
         console.error("❌ Error al subir imagen a Cloudinary:", error);
       }
@@ -86,10 +89,17 @@ const editarPublicacion = async (req, res) => {
 
     let imagenUrl = publicacion.imagen;
 
-    if (req.file) {
-      const localPath = path.join(__dirname, "../uploads/publicaciones/", req.file.filename);
-      imagenUrl = await subirImagenPublicacion(localPath);
-      fs.unlinkSync(localPath);
+    if (req.files && req.files.length > 0) {
+      const archivo = req.files[0];
+      const tempPath = path.join(__dirname, "../uploads/publicaciones", archivo.originalname);
+      fs.writeFileSync(tempPath, archivo.buffer);
+
+      try {
+        imagenUrl = await subirImagenPublicacion(tempPath);
+        fs.unlinkSync(tempPath);
+      } catch (error) {
+        console.error("❌ Error al subir imagen a Cloudinary:", error);
+      }
     }
 
     publicacion.texto = texto;
