@@ -1,127 +1,147 @@
 const Publicacion = require("../models/Publicacion");
 const fs = require("fs");
 const path = require("path");
-const jwt = require("jsonwebtoken");
+const { subirImagenPublicacion } = require("../helpers/cloudinary");
 
-
-// Crear publicación con o sin imagen
-const jwt = require("jsonwebtoken");
-const Publicacion = require("../models/Publicacion");
-
+// Crear nueva publicación
 const crearPublicacion = async (req, res) => {
   try {
-    const token = req.header("Authorization");
-
-    if (!token) {
-      return res.status(401).json({
-        status: "error",
-        message: "Token no proporcionado.",
-      });
-    }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
-
     const { texto, tarea } = req.body;
+    const autor = req.user.id;
 
     if (!texto || !tarea) {
       return res.status(400).json({
         status: "error",
-        message: "Faltan datos obligatorios: texto o tarea.",
+        message: "Faltan datos obligatorios.",
       });
     }
 
-    let nueva = new Publicacion({
-      autor: req.user.id,
-      texto,
-      tarea,
-    });
+    let imagenUrl = null;
 
     if (req.file) {
-      const tiposPermitidos = ["image/jpeg", "image/png", "image/jpg", "image/webp"];
-      if (!tiposPermitidos.includes(req.file.mimetype)) {
-        return res.status(400).json({
-          status: "error",
-          message: "Formato de imagen no permitido. Usa JPG, PNG o WEBP.",
-        });
-      }
-
-      const maxSizeMB = 2;
-      if (req.file.size > maxSizeMB * 1024 * 1024) {
-        return res.status(400).json({
-          status: "error",
-          message: `La imagen supera el tamaño máximo de ${maxSizeMB} MB.`,
-        });
-      }
-
-      nueva.imagen = req.file.filename;
+      const localPath = path.join(__dirname, "../uploads/publicaciones/", req.file.filename);
+      imagenUrl = await subirImagenPublicacion(localPath);
+      fs.unlinkSync(localPath);
     }
 
-    const guardada = await nueva.save();
+    const nuevaPublicacion = new Publicacion({
+      texto,
+      tarea,
+      autor,
+      imagen: imagenUrl,
+    });
 
-    return res.status(201).json({
+    await nuevaPublicacion.save();
+
+    return res.status(200).json({
       status: "success",
       message: "Publicación creada correctamente.",
-      publicacion: guardada,
+      publicacion: nuevaPublicacion,
     });
   } catch (error) {
-    console.error("❌ Error interno en crearPublicacion:", error);
     return res.status(500).json({
       status: "error",
-      message: "Error al crear publicación.",
-      error: error.message,
+      message: "Error al crear la publicación.",
     });
   }
 };
 
-module.exports = { crearPublicacion };
-
-
-// Publicaciones propias
-const misPublicaciones = async (req, res) => {
+// Editar publicación existente
+const editarPublicacion = async (req, res) => {
   try {
-    const publicaciones = await Publicacion.find({ autor: req.user.id })
-      .populate("tarea", "titulo")
+    const { texto, tarea } = req.body;
+    const publicacionId = req.params.id;
+    const usuarioId = req.user.id;
+    const esAdmin = req.user.rol === "admin";
+
+    if (!texto || !tarea) {
+      return res.status(400).json({
+        status: "error",
+        message: "Los campos 'texto' y 'tarea' son obligatorios.",
+      });
+    }
+
+    const publicacion = await Publicacion.findById(publicacionId);
+
+    if (!publicacion) {
+      return res.status(404).json({
+        status: "error",
+        message: "Publicación no encontrada.",
+      });
+    }
+
+    if (publicacion.autor.toString() !== usuarioId && !esAdmin) {
+      return res.status(403).json({
+        status: "error",
+        message: "No tienes permiso para editar esta publicación.",
+      });
+    }
+
+    let imagenUrl = publicacion.imagen;
+
+    if (req.file) {
+      const localPath = path.join(__dirname, "../uploads/publicaciones/", req.file.filename);
+      imagenUrl = await subirImagenPublicacion(localPath);
+      fs.unlinkSync(localPath);
+    }
+
+    publicacion.texto = texto;
+    publicacion.tarea = tarea;
+    publicacion.imagen = imagenUrl;
+
+    await publicacion.save();
+
+    return res.status(200).json({
+      status: "success",
+      message: "Publicación actualizada correctamente.",
+      publicacion,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      status: "error",
+      message: "Error al editar la publicación.",
+    });
+  }
+};
+
+// Obtener todas las publicaciones
+const listarTodasPublicaciones = async (req, res) => {
+  try {
+    const publicaciones = await Publicacion.find()
+      .populate("autor", "nombre apellidos imagen rol")
       .sort({ creado_en: -1 });
 
     return res.status(200).json({
       status: "success",
-      total: publicaciones.length,
       publicaciones,
     });
   } catch (error) {
     return res.status(500).json({
       status: "error",
       message: "Error al obtener publicaciones.",
-      error: error.message,
     });
   }
 };
 
-// Listado general
-const listarTodasPublicaciones = async (req, res) => {
+// Obtener publicaciones del usuario
+const misPublicaciones = async (req, res) => {
   try {
-    const publicaciones = await Publicacion.find()
-      .populate("autor", "nombre apellidos email imagen")
-      .populate("tarea", "titulo")
+    const publicaciones = await Publicacion.find({ autor: req.user.id })
       .sort({ creado_en: -1 });
 
     return res.status(200).json({
       status: "success",
-      message: "Listado general de publicaciones.",
-      total: publicaciones.length,
       publicaciones,
     });
   } catch (error) {
     return res.status(500).json({
       status: "error",
-      message: "Error interno al obtener las publicaciones.",
-      error: error.message,
+      message: "Error al obtener tus publicaciones.",
     });
   }
 };
 
-// Eliminar publicación solo si es del autor o admin
+// Eliminar publicación
 const eliminarPublicacion = async (req, res) => {
   try {
     const publicacion = await Publicacion.findById(req.params.id);
@@ -133,30 +153,14 @@ const eliminarPublicacion = async (req, res) => {
       });
     }
 
-    if (
-      publicacion.autor.toString() !== req.user.id &&
-      req.user.rol !== "admin"
-    ) {
+    if (publicacion.autor.toString() !== req.user.id) {
       return res.status(403).json({
         status: "error",
-        message: "No autorizado para eliminar esta publicación.",
+        message: "No tienes permiso para eliminar esta publicación.",
       });
     }
 
-    if (publicacion.imagen) {
-      const rutaImagen = path.join(
-        __dirname,
-        "..",
-        "uploads",
-        "publicaciones",
-        publicacion.imagen
-      );
-      if (fs.existsSync(rutaImagen)) {
-        fs.unlinkSync(rutaImagen);
-      }
-    }
-
-    await Publicacion.findByIdAndDelete(req.params.id);
+    await publicacion.deleteOne();
 
     return res.status(200).json({
       status: "success",
@@ -166,14 +170,14 @@ const eliminarPublicacion = async (req, res) => {
     return res.status(500).json({
       status: "error",
       message: "Error al eliminar publicación.",
-      error: error.message,
     });
   }
 };
 
 module.exports = {
   crearPublicacion,
+  editarPublicacion,
+  listarTodasPublicaciones,
   misPublicaciones,
   eliminarPublicacion,
-  listarTodasPublicaciones,
 };

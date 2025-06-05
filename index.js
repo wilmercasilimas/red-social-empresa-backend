@@ -19,10 +19,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ✅ Habilitar subida de archivos con express-fileupload
-app.use(fileUpload({
-  useTempFiles: true,
-  tempFileDir: "/tmp/",
-}));
+app.use(
+  fileUpload({
+    useTempFiles: true,
+    tempFileDir: "/tmp/",
+  })
+);
 
 // Rutas de usuario
 const userRoutes = require("./routes/user");
@@ -35,7 +37,6 @@ app.use(
 app.get("/api/avatar/default.png", (req, res) => {
   res.redirect(process.env.DEFAULT_AVATAR_URL);
 });
-
 
 app.use("/api/user", userRoutes);
 
@@ -54,6 +55,10 @@ app.use("/api/tarea", tareaRoutes);
 // Rutas de publicaciones
 const publicacionRoutes = require("./routes/publicacion");
 app.use("/api/publicacion", publicacionRoutes);
+
+// Rutas de comentarios
+const comentarioRoutes = require("./routes/comentario");
+app.use("/api/comentario", comentarioRoutes);
 
 // Rutas de incidencias
 const incidenciaRoutes = require("./routes/incidencia");

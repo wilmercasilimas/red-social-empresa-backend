@@ -2,7 +2,6 @@ const express = require("express");
 const router = express.Router();
 const multer = require("multer");
 const path = require("path");
-
 const { auth } = require("../middlewares/auth");
 const PublicacionController = require("../controllers/publicacion");
 
@@ -17,7 +16,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// Crear publicación (con imagen opcional)
+// Crear publicación (con imagen)
 router.post(
   "/crear",
   upload.single("imagen"),
@@ -25,6 +24,13 @@ router.post(
   PublicacionController.crearPublicacion
 );
 
+// Editar publicación (con imagen opcional)
+router.put(
+  "/editar/:id",
+  upload.single("imagen"),
+  auth,
+  PublicacionController.editarPublicacion
+);
 
 // Listar publicaciones del usuario autenticado
 router.get("/mis-publicaciones", auth, PublicacionController.misPublicaciones);
