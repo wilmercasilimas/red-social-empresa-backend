@@ -124,6 +124,7 @@ const listarTodasPublicaciones = async (req, res) => {
   try {
     const publicaciones = await Publicacion.find()
       .populate("autor", "nombre apellidos imagen rol")
+      .populate("tarea") // ✅ mostrar datos completos de la tarea
       .sort({ creado_en: -1 });
 
     return res.status(200).json({
@@ -142,6 +143,7 @@ const listarTodasPublicaciones = async (req, res) => {
 const misPublicaciones = async (req, res) => {
   try {
     const publicaciones = await Publicacion.find({ autor: req.user.id })
+      .populate("tarea") // ✅ incluir info de la tarea
       .sort({ creado_en: -1 });
 
     return res.status(200).json({
