@@ -1,5 +1,5 @@
+// helpers/cloudinary.js
 const cloudinary = require("cloudinary").v2;
-const path = require("path");
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -8,17 +8,24 @@ cloudinary.config({
   secure: true,
 });
 
-// ✅ Subir imagen de publicaciones desde archivo local
+// Subir imagen de publicaciones
 const subirImagenPublicacion = async (archivoLocal) => {
-  try {
-    const resultado = await cloudinary.uploader.upload(archivoLocal, {
-      folder: "publicaciones_empresa",
-    });
-    return resultado.secure_url;
-  } catch (error) {
-    console.error("Error al subir imagen a Cloudinary:", error);
-    throw new Error("No se pudo subir la imagen");
-  }
+  const resultado = await cloudinary.uploader.upload(archivoLocal, {
+    folder: "publicaciones_empresa",
+  });
+  return resultado.secure_url;
 };
 
-module.exports = { cloudinary, subirImagenPublicacion };
+// Subir imagen de avatar
+const subirAvatarCloudinary = async (archivoLocal) => {
+  const resultado = await cloudinary.uploader.upload(archivoLocal, {
+    folder: "avatars_empresa",
+  });
+  return resultado.secure_url;
+};
+
+module.exports = {
+  cloudinary,
+  subirImagenPublicacion,
+  subirAvatarCloudinary, // ← ESTE es el que necesitas restaurar
+};
