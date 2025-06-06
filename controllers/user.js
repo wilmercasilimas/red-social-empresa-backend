@@ -185,31 +185,42 @@ const login = async (req, res) => {
 // SUBIR AVATAR CON CLOUDINARY usando Multer
 const subirAvatarCloudinary = async (req, res) => {
   try {
-    if (!req.file) {
+    if (!req.files || !req.files.file0) {
       return res.status(400).json({
         status: "error",
         message: "No se ha subido ninguna imagen.",
       });
     }
 
-    const filePath = req.file.path;
-    const result = await cloudinary.uploader.upload(filePath, {
+    const file = req.files.file0;
+    const userId = req.user.id;
+
+    const usuario = await User.findById(userId);
+
+    // Si tiene un avatar anterior en Cloudinary, lo eliminamos
+    if (usuario.avatar_public_id) {
+      await cloudinary.uploader.destroy(usuario.avatar_public_id);
+    }
+
+    // Subir nuevo avatar
+    const resultado = await cloudinary.uploader.upload(file.tempFilePath, {
       folder: "avatars_empresa",
     });
 
-    const actualizado = await User.findByIdAndUpdate(
-      req.user.id,
-      { imagen: result.secure_url },
-      { new: true }
-    ).select("-password");
+    usuario.imagen = resultado.secure_url;
+    usuario.avatar_public_id = resultado.public_id;
+
+    await usuario.save();
+
+    // Excluir la contraseña
+    const { password, ...usuarioSinPassword } = usuario.toObject();
 
     return res.status(200).json({
       status: "success",
       message: "Avatar actualizado correctamente.",
-      user: actualizado,
+      user: usuarioSinPassword,
     });
   } catch (error) {
-    console.error("❌ Error al subir avatar:", error);
     return res.status(500).json({
       status: "error",
       message: "Error al subir avatar.",
@@ -217,6 +228,7 @@ const subirAvatarCloudinary = async (req, res) => {
     });
   }
 };
+
 
 
 // LISTAR USUARIOS
