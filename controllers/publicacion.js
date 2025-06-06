@@ -6,8 +6,7 @@ const { subirImagenPublicacion } = require("../helpers/cloudinary");
 // Crear nueva publicación
 const crearPublicacion = async (req, res) => {
   try {
-    const texto = req.body.texto?.trim();
-    const tarea = req.body.tarea?.trim();
+    const { texto, tarea } = req.body;
     const autor = req.user.id;
 
     if (!texto || !tarea) {
@@ -19,16 +18,10 @@ const crearPublicacion = async (req, res) => {
 
     let imagenUrl = null;
 
-    if (req.files && req.files.length > 0) {
-      const archivo = req.files[0];
-      const tempPath = archivo.path;
-
-      try {
-        imagenUrl = await subirImagenPublicacion(tempPath);
-        fs.unlinkSync(tempPath);
-      } catch (error) {
-        console.error("❌ Error al subir imagen a Cloudinary:", error);
-      }
+    if (req.file) {
+      const localPath = path.join(__dirname, "../uploads/publicaciones", req.file.filename);
+      imagenUrl = await subirImagenPublicacion(localPath);
+      fs.unlinkSync(localPath);
     }
 
     const nuevaPublicacion = new Publicacion({
@@ -46,7 +39,6 @@ const crearPublicacion = async (req, res) => {
       publicacion: nuevaPublicacion,
     });
   } catch (error) {
-    console.error("❌ Error interno en crearPublicacion:", error);
     return res.status(500).json({
       status: "error",
       message: "Error interno al crear la publicación.",
@@ -57,8 +49,7 @@ const crearPublicacion = async (req, res) => {
 // Editar publicación existente
 const editarPublicacion = async (req, res) => {
   try {
-    const texto = req.body.texto?.trim();
-    const tarea = req.body.tarea?.trim();
+    const { texto, tarea } = req.body;
     const publicacionId = req.params.id;
     const usuarioId = req.user.id;
     const esAdmin = req.user.rol === "admin";
@@ -88,16 +79,10 @@ const editarPublicacion = async (req, res) => {
 
     let imagenUrl = publicacion.imagen;
 
-    if (req.files && req.files.length > 0) {
-      const archivo = req.files[0];
-      const tempPath = archivo.path;
-
-      try {
-        imagenUrl = await subirImagenPublicacion(tempPath);
-        fs.unlinkSync(tempPath);
-      } catch (error) {
-        console.error("❌ Error al subir imagen a Cloudinary:", error);
-      }
+    if (req.file) {
+      const localPath = path.join(__dirname, "../uploads/publicaciones/", req.file.filename);
+      imagenUrl = await subirImagenPublicacion(localPath);
+      fs.unlinkSync(localPath);
     }
 
     publicacion.texto = texto;
@@ -119,16 +104,27 @@ const editarPublicacion = async (req, res) => {
   }
 };
 
-// Obtener todas las publicaciones
+// ✅ Listar todas las publicaciones (con paginación)
 const listarTodasPublicaciones = async (req, res) => {
   try {
+    const pagina = parseInt(req.query.pagina) || 1;
+    const limite = parseInt(req.query.limite) || 5;
+    const skip = (pagina - 1) * limite;
+
+    const total = await Publicacion.countDocuments();
+
     const publicaciones = await Publicacion.find()
       .populate("autor", "nombre apellidos imagen rol")
-      .populate("tarea") // ✅ mostrar datos completos de la tarea
-      .sort({ creado_en: -1 });
+      .populate("tarea")
+      .sort({ creado_en: -1 })
+      .skip(skip)
+      .limit(limite);
 
     return res.status(200).json({
       status: "success",
+      total,
+      pagina,
+      limite,
       publicaciones,
     });
   } catch (error) {
@@ -139,21 +135,33 @@ const listarTodasPublicaciones = async (req, res) => {
   }
 };
 
-// Obtener publicaciones del usuario
+// ✅ Listar todas las publicaciones (ruta alternativa con paginación)
 const misPublicaciones = async (req, res) => {
   try {
-    const publicaciones = await Publicacion.find({ autor: req.user.id })
-      .populate("tarea") // ✅ incluir info de la tarea
-      .sort({ creado_en: -1 });
+    const pagina = parseInt(req.query.pagina) || 1;
+    const limite = parseInt(req.query.limite) || 5;
+    const skip = (pagina - 1) * limite;
+
+    const total = await Publicacion.countDocuments();
+
+    const publicaciones = await Publicacion.find()
+      .populate("autor", "nombre apellidos imagen rol")
+      .populate("tarea")
+      .sort({ creado_en: -1 })
+      .skip(skip)
+      .limit(limite);
 
     return res.status(200).json({
       status: "success",
+      total,
+      pagina,
+      limite,
       publicaciones,
     });
   } catch (error) {
     return res.status(500).json({
       status: "error",
-      message: "Error al obtener tus publicaciones.",
+      message: "Error al obtener publicaciones.",
     });
   }
 };
@@ -162,6 +170,8 @@ const misPublicaciones = async (req, res) => {
 const eliminarPublicacion = async (req, res) => {
   try {
     const publicacion = await Publicacion.findById(req.params.id);
+    const usuarioId = req.user.id;
+    const esAdmin = req.user.rol === "admin";
 
     if (!publicacion) {
       return res.status(404).json({
@@ -170,7 +180,7 @@ const eliminarPublicacion = async (req, res) => {
       });
     }
 
-    if (publicacion.autor.toString() !== req.user.id) {
+    if (publicacion.autor.toString() !== usuarioId && !esAdmin) {
       return res.status(403).json({
         status: "error",
         message: "No tienes permiso para eliminar esta publicación.",
