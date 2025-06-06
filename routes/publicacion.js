@@ -1,26 +1,25 @@
-// routes/publicacion.js
 const express = require("express");
 const router = express.Router();
-const path = require("path");
 
 const { auth } = require("../middlewares/auth");
 const PublicacionController = require("../controllers/publicacion");
 
-// ✅ Middleware de multer ya personalizado (memoryStorage + filtro de imagen)
-const upload = require("../middlewares/multer");
+// ✅ Middleware multer configurado para guardar imágenes en /uploads/publicaciones
+const configurarMulter = require("../middlewares/multer");
+const upload = configurarMulter("publicaciones");
 
 // ✅ Crear publicación (imagen opcional)
 router.post(
   "/crear",
-  upload.any(), // ✅ permite que imagen esté presente o no
+  upload.any(), // acepta imágenes opcionales
   auth,
   PublicacionController.crearPublicacion
 );
 
-// ✅ Editar publicación (con nueva imagen opcional)
+// ✅ Editar publicación (imagen opcional)
 router.put(
   "/editar/:id",
-  upload.any(), // ✅ mismo enfoque para permitir imagen opcional
+  upload.any(),
   auth,
   PublicacionController.editarPublicacion
 );
@@ -31,7 +30,7 @@ router.get("/mis-publicaciones", auth, PublicacionController.misPublicaciones);
 // ✅ Eliminar publicación
 router.delete("/eliminar/:id", auth, PublicacionController.eliminarPublicacion);
 
-// ✅ Listar todas las publicaciones (admin/gerencia)
+// ✅ Listar todas las publicaciones
 router.get("/todas", auth, PublicacionController.listarTodasPublicaciones);
 
 module.exports = router;

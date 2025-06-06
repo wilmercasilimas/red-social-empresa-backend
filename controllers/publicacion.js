@@ -17,8 +17,9 @@ const crearPublicacion = async (req, res) => {
     }
 
     let imagenUrl = null;
-    if (req.file) {
-      const localPath = path.join(__dirname, "../uploads/publicaciones", req.file.filename);
+    if (req.files && req.files.length > 0) {
+      const archivo = req.files[0];
+      const localPath = path.join(__dirname, "../uploads/publicaciones", archivo.filename);
       imagenUrl = await subirImagenPublicacion(localPath);
       fs.unlinkSync(localPath);
     }
@@ -76,8 +77,9 @@ const editarPublicacion = async (req, res) => {
     }
 
     let imagenUrl = publicacion.imagen;
-    if (req.file) {
-      const localPath = path.join(__dirname, "../uploads/publicaciones", req.file.filename);
+    if (req.files && req.files.length > 0) {
+      const archivo = req.files[0];
+      const localPath = path.join(__dirname, "../uploads/publicaciones", archivo.filename);
       imagenUrl = await subirImagenPublicacion(localPath);
       fs.unlinkSync(localPath);
     }
