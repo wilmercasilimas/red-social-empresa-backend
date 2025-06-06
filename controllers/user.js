@@ -192,14 +192,13 @@ const subirAvatarCloudinary = async (req, res) => {
       });
     }
 
-    const userId = req.user.id;
-
-    const result = await cloudinary.uploader.upload(req.file.path, {
+    const filePath = req.file.path;
+    const result = await cloudinary.uploader.upload(filePath, {
       folder: "avatars_empresa",
     });
 
     const actualizado = await User.findByIdAndUpdate(
-      userId,
+      req.user.id,
       { imagen: result.secure_url },
       { new: true }
     ).select("-password");
@@ -210,6 +209,7 @@ const subirAvatarCloudinary = async (req, res) => {
       user: actualizado,
     });
   } catch (error) {
+    console.error("❌ Error al subir avatar:", error);
     return res.status(500).json({
       status: "error",
       message: "Error al subir avatar.",

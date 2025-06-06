@@ -1,23 +1,17 @@
+// ✅ routes/user.js
 const express = require("express");
 const router = express.Router();
 const UserController = require("../controllers/user");
 const { auth, esAdmin } = require("../middlewares/auth");
 const PasswordController = require("../controllers/password");
-
-// ✅ Multer configurado para carpeta de avatares
 const configurarMulter = require("../middlewares/multer");
-const upload = configurarMulter("avatars");
+const uploadAvatar = configurarMulter("avatars");
 
 // Rutas públicas
 router.post("/login", UserController.login);
 
-// ✅ Subida de avatar a Cloudinary con multer
-router.post(
-  "/subir",
-  auth,
-  upload.single("avatar"), // <-- clave esperada desde frontend
-  UserController.subirAvatarCloudinary
-);
+// Subida de avatar a Cloudinary ✅
+router.post("/subir", auth, uploadAvatar.single("file0"), UserController.subirAvatarCloudinary);
 
 // Rutas solo para administradores
 router.post("/register", auth, esAdmin, UserController.registrar);
