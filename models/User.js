@@ -40,10 +40,6 @@ const UserSchema = new Schema({
     type: String,
     default: "default.png",
   },
-  avatar_public_id: {
-    type: String,
-    default: null,
-  },
   creado_en: {
     type: Date,
     default: Date.now,
