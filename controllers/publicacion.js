@@ -1,7 +1,7 @@
 const Publicacion = require("../models/Publicacion");
 const fs = require("fs");
 const path = require("path");
-const { subirImagenPublicacion } = require("../helpers/cloudinary");
+const { cloudinary, subirImagenPublicacion } = require("../helpers/cloudinary");
 
 // Crear nueva publicación
 const crearPublicacion = async (req, res) => {
@@ -106,7 +106,9 @@ const editarPublicacion = async (req, res) => {
 // Listar publicaciones del usuario autenticado
 const misPublicaciones = async (req, res) => {
   try {
-    const publicaciones = await Publicacion.find({ autor: req.user.id }).populate("tarea").sort({ creado_en: -1 });
+    const publicaciones = await Publicacion.find({ autor: req.user.id })
+      .populate("tarea")
+      .sort({ creado_en: -1 });
 
     return res.status(200).json({
       status: "success",
@@ -120,13 +122,27 @@ const misPublicaciones = async (req, res) => {
   }
 };
 
-// Listar todas las publicaciones (admin / gerencia)
+// ✅ Listar TODAS las publicaciones (todos los roles) con paginación
 const listarTodasPublicaciones = async (req, res) => {
   try {
-    const publicaciones = await Publicacion.find().populate("tarea").sort({ creado_en: -1 });
+    const pagina = parseInt(req.query.pagina) || 1;
+    const limite = parseInt(req.query.limite) || 10;
+    const skip = (pagina - 1) * limite;
+
+    const total = await Publicacion.countDocuments();
+    const publicaciones = await Publicacion.find()
+      .populate("tarea")
+      .sort({ creado_en: -1 })
+      .skip(skip)
+      .limit(limite);
+
+    const totalPaginas = Math.ceil(total / limite);
 
     return res.status(200).json({
       status: "success",
+      paginaActual: pagina,
+      totalPaginas,
+      totalPublicaciones: total,
       publicaciones,
     });
   } catch (error) {
@@ -137,7 +153,7 @@ const listarTodasPublicaciones = async (req, res) => {
   }
 };
 
-// Eliminar publicación
+// ✅ Eliminar publicación + imagen en Cloudinary
 const eliminarPublicacion = async (req, res) => {
   try {
     const { id } = req.params;
@@ -157,6 +173,15 @@ const eliminarPublicacion = async (req, res) => {
         status: "error",
         message: "No tienes permiso para eliminar esta publicación.",
       });
+    }
+
+    // 🧹 Si tiene imagen, eliminarla de Cloudinary
+    if (publicacion.imagen) {
+      const publicIdMatch = publicacion.imagen.match(/\/publicaciones_empresa\/(.+)\.(jpg|png|jpeg|gif)/);
+      if (publicIdMatch && publicIdMatch[1]) {
+        const publicId = `publicaciones_empresa/${publicIdMatch[1]}`;
+        await cloudinary.uploader.destroy(publicId);
+      }
     }
 
     await Publicacion.findByIdAndDelete(id);
