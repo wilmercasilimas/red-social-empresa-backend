@@ -122,7 +122,7 @@ const misPublicaciones = async (req, res) => {
   }
 };
 
-// ✅ Listar TODAS las publicaciones (todos los roles) con paginación
+// ✅ Listar TODAS las publicaciones (todos los roles) con paginación y autor incluido
 const listarTodasPublicaciones = async (req, res) => {
   try {
     const pagina = parseInt(req.query.pagina) || 1;
@@ -132,6 +132,7 @@ const listarTodasPublicaciones = async (req, res) => {
     const total = await Publicacion.countDocuments();
     const publicaciones = await Publicacion.find()
       .populate("tarea")
+      .populate("autor", "nombre apellidos imagen") // ✅ ahora incluye datos del autor
       .sort({ creado_en: -1 })
       .skip(skip)
       .limit(limite);
@@ -152,6 +153,7 @@ const listarTodasPublicaciones = async (req, res) => {
     });
   }
 };
+
 
 // ✅ Eliminar publicación + imagen en Cloudinary
 const eliminarPublicacion = async (req, res) => {
