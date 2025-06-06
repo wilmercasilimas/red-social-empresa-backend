@@ -18,11 +18,7 @@ const crearPublicacion = async (req, res) => {
 
     let imagenUrl = null;
     if (req.file) {
-      const localPath = path.join(
-        __dirname,
-        "../uploads/publicaciones",
-        req.file.filename
-      );
+      const localPath = path.join(__dirname, "../uploads/publicaciones", req.file.filename);
       imagenUrl = await subirImagenPublicacion(localPath);
       fs.unlinkSync(localPath);
     }
@@ -81,11 +77,7 @@ const editarPublicacion = async (req, res) => {
 
     let imagenUrl = publicacion.imagen;
     if (req.file) {
-      const localPath = path.join(
-        __dirname,
-        "../uploads/publicaciones",
-        req.file.filename
-      );
+      const localPath = path.join(__dirname, "../uploads/publicaciones", req.file.filename);
       imagenUrl = await subirImagenPublicacion(localPath);
       fs.unlinkSync(localPath);
     }
@@ -109,10 +101,80 @@ const editarPublicacion = async (req, res) => {
   }
 };
 
+// Listar publicaciones del usuario autenticado
+const misPublicaciones = async (req, res) => {
+  try {
+    const publicaciones = await Publicacion.find({ autor: req.user.id }).populate("tarea").sort({ creado_en: -1 });
+
+    return res.status(200).json({
+      status: "success",
+      publicaciones,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      status: "error",
+      message: "Error al obtener tus publicaciones.",
+    });
+  }
+};
+
+// Listar todas las publicaciones (admin / gerencia)
+const listarTodasPublicaciones = async (req, res) => {
+  try {
+    const publicaciones = await Publicacion.find().populate("tarea").sort({ creado_en: -1 });
+
+    return res.status(200).json({
+      status: "success",
+      publicaciones,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      status: "error",
+      message: "Error al listar publicaciones.",
+    });
+  }
+};
+
+// Eliminar publicación
+const eliminarPublicacion = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const usuarioId = req.user.id;
+    const esAdmin = req.user.rol === "admin";
+
+    const publicacion = await Publicacion.findById(id);
+    if (!publicacion) {
+      return res.status(404).json({
+        status: "error",
+        message: "Publicación no encontrada.",
+      });
+    }
+
+    if (publicacion.autor.toString() !== usuarioId && !esAdmin) {
+      return res.status(403).json({
+        status: "error",
+        message: "No tienes permiso para eliminar esta publicación.",
+      });
+    }
+
+    await Publicacion.findByIdAndDelete(id);
+
+    return res.status(200).json({
+      status: "success",
+      message: "Publicación eliminada correctamente.",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      status: "error",
+      message: "Error al eliminar la publicación.",
+    });
+  }
+};
+
 module.exports = {
   crearPublicacion,
   editarPublicacion,
-  listarTodasPublicaciones: require("./publicacion").listarTodasPublicaciones,
-  misPublicaciones: require("./publicacion").misPublicaciones,
-  eliminarPublicacion: require("./publicacion").eliminarPublicacion,
+  misPublicaciones,
+  listarTodasPublicaciones,
+  eliminarPublicacion,
 };

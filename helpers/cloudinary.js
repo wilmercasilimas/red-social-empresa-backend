@@ -8,7 +8,7 @@ cloudinary.config({
   secure: true,
 });
 
-// Función para subir imágenes de publicaciones
+// ✅ Subir imagen de publicaciones desde archivo local
 const subirImagenPublicacion = async (archivoLocal) => {
   try {
     const resultado = await cloudinary.uploader.upload(archivoLocal, {
