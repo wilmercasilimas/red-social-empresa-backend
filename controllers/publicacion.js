@@ -17,9 +17,12 @@ const crearPublicacion = async (req, res) => {
     }
 
     let imagenUrl = null;
-
     if (req.file) {
-      const localPath = path.join(__dirname, "../uploads/publicaciones", req.file.filename);
+      const localPath = path.join(
+        __dirname,
+        "../uploads/publicaciones",
+        req.file.filename
+      );
       imagenUrl = await subirImagenPublicacion(localPath);
       fs.unlinkSync(localPath);
     }
@@ -62,7 +65,6 @@ const editarPublicacion = async (req, res) => {
     }
 
     const publicacion = await Publicacion.findById(publicacionId);
-
     if (!publicacion) {
       return res.status(404).json({
         status: "error",
@@ -78,9 +80,12 @@ const editarPublicacion = async (req, res) => {
     }
 
     let imagenUrl = publicacion.imagen;
-
     if (req.file) {
-      const localPath = path.join(__dirname, "../uploads/publicaciones/", req.file.filename);
+      const localPath = path.join(
+        __dirname,
+        "../uploads/publicaciones",
+        req.file.filename
+      );
       imagenUrl = await subirImagenPublicacion(localPath);
       fs.unlinkSync(localPath);
     }
@@ -104,107 +109,10 @@ const editarPublicacion = async (req, res) => {
   }
 };
 
-// ✅ Listar todas las publicaciones (con paginación)
-const listarTodasPublicaciones = async (req, res) => {
-  try {
-    const pagina = parseInt(req.query.pagina) || 1;
-    const limite = parseInt(req.query.limite) || 5;
-    const skip = (pagina - 1) * limite;
-
-    const total = await Publicacion.countDocuments();
-
-    const publicaciones = await Publicacion.find()
-      .populate("autor", "nombre apellidos imagen rol")
-      .populate("tarea")
-      .sort({ creado_en: -1 })
-      .skip(skip)
-      .limit(limite);
-
-    return res.status(200).json({
-      status: "success",
-      total,
-      pagina,
-      limite,
-      publicaciones,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      status: "error",
-      message: "Error al obtener publicaciones.",
-    });
-  }
-};
-
-// ✅ Listar todas las publicaciones (ruta alternativa con paginación)
-const misPublicaciones = async (req, res) => {
-  try {
-    const pagina = parseInt(req.query.pagina) || 1;
-    const limite = parseInt(req.query.limite) || 5;
-    const skip = (pagina - 1) * limite;
-
-    const total = await Publicacion.countDocuments();
-
-    const publicaciones = await Publicacion.find()
-      .populate("autor", "nombre apellidos imagen rol")
-      .populate("tarea")
-      .sort({ creado_en: -1 })
-      .skip(skip)
-      .limit(limite);
-
-    return res.status(200).json({
-      status: "success",
-      total,
-      pagina,
-      limite,
-      publicaciones,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      status: "error",
-      message: "Error al obtener publicaciones.",
-    });
-  }
-};
-
-// Eliminar publicación
-const eliminarPublicacion = async (req, res) => {
-  try {
-    const publicacion = await Publicacion.findById(req.params.id);
-    const usuarioId = req.user.id;
-    const esAdmin = req.user.rol === "admin";
-
-    if (!publicacion) {
-      return res.status(404).json({
-        status: "error",
-        message: "Publicación no encontrada.",
-      });
-    }
-
-    if (publicacion.autor.toString() !== usuarioId && !esAdmin) {
-      return res.status(403).json({
-        status: "error",
-        message: "No tienes permiso para eliminar esta publicación.",
-      });
-    }
-
-    await publicacion.deleteOne();
-
-    return res.status(200).json({
-      status: "success",
-      message: "Publicación eliminada correctamente.",
-    });
-  } catch (error) {
-    return res.status(500).json({
-      status: "error",
-      message: "Error al eliminar publicación.",
-    });
-  }
-};
-
 module.exports = {
   crearPublicacion,
   editarPublicacion,
-  listarTodasPublicaciones,
-  misPublicaciones,
-  eliminarPublicacion,
+  listarTodasPublicaciones: require("./publicacion").listarTodasPublicaciones,
+  misPublicaciones: require("./publicacion").misPublicaciones,
+  eliminarPublicacion: require("./publicacion").eliminarPublicacion,
 };
