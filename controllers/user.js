@@ -182,20 +182,19 @@ const login = async (req, res) => {
   }
 };
 
-// SUBIR AVATAR CON CLOUDINARY
+// SUBIR AVATAR CON CLOUDINARY usando Multer
 const subirAvatarCloudinary = async (req, res) => {
   try {
-    if (!req.files || !req.files.file0) {
+    if (!req.file) {
       return res.status(400).json({
         status: "error",
         message: "No se ha subido ninguna imagen.",
       });
     }
 
-    const file = req.files.file0;
     const userId = req.user.id;
 
-    const result = await cloudinary.uploader.upload(file.tempFilePath, {
+    const result = await cloudinary.uploader.upload(req.file.path, {
       folder: "avatars_empresa",
     });
 
@@ -218,6 +217,7 @@ const subirAvatarCloudinary = async (req, res) => {
     });
   }
 };
+
 
 // LISTAR USUARIOS
 const listarUsuarios = async (req, res) => {
