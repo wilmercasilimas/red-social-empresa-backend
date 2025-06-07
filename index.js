@@ -55,6 +55,10 @@ app.use("/api/comentario", comentarioRoutes);
 const incidenciaRoutes = require("./routes/incidencia");
 app.use("/api/incidencia", incidenciaRoutes);
 
+const reaccionRoutes = require("./routes/reaccion");
+app.use("/api/reaccion", reaccionRoutes);
+
+
 // Ruta de prueba
 app.get("/", (req, res) => {
   res.status(200).send({
