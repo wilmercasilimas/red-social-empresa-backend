@@ -1,15 +1,16 @@
+// ✅ routes/comentario.js
 const express = require("express");
 const router = express.Router();
-const { auth } = require("../middlewares/auth");
-const ComentarioController = require("../controllers/comentario");
+const auth = require("../middlewares/auth");
+const {
+  crearComentario,
+  obtenerComentarios,
+} = require("../controllers/comentario");
 
-// Crear un comentario en una publicación
-router.post("/crear", auth, ComentarioController.crearComentario);
+// Crear nuevo comentario
+router.post("/crear", auth, crearComentario);
 
-// Obtener todos los comentarios de una publicación
-router.get("/publicacion/:id", auth, ComentarioController.listarComentariosPorPublicacion);
-
-// Eliminar un comentario (autor o admin)
-router.delete("/eliminar/:id", auth, ComentarioController.eliminarComentario);
+// Obtener comentarios por publicación
+router.get("/publicacion/:publicacionId", auth, obtenerComentarios);
 
 module.exports = router;
