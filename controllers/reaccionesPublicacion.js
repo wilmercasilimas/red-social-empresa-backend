@@ -1,5 +1,6 @@
 // controllers/reaccionesPublicacion.js
 const ReaccionPublicacion = require("../models/ReaccionPublicacion");
+const mongoose = require("mongoose");
 
 // ✅ Crear o actualizar una reacción
 const reaccionar = async (req, res) => {
@@ -63,7 +64,7 @@ const obtenerReacciones = async (req, res) => {
     const { publicacionId } = req.params;
 
     const resumen = await ReaccionPublicacion.aggregate([
-      { $match: { publicacion: require("mongoose").Types.ObjectId(publicacionId) } },
+      { $match: { publicacion: mongoose.Types.ObjectId(publicacionId) } },
       { $group: { _id: "$tipo", total: { $sum: 1 } } },
     ]);
 
@@ -79,8 +80,8 @@ const obtenerReacciones = async (req, res) => {
   }
 };
 
-const {
+module.exports = {
   reaccionar,
   eliminarReaccion,
   obtenerReacciones,
-} = require("../controllers/reaccionesPublicacion");
+};
