@@ -19,7 +19,11 @@ const crearPublicacion = async (req, res) => {
     let imagenUrl = null;
     if (req.files && req.files.length > 0) {
       const archivo = req.files[0];
-      const localPath = path.join(__dirname, "../uploads/publicaciones", archivo.filename);
+      const localPath = path.join(
+        __dirname,
+        "../uploads/publicaciones",
+        archivo.filename
+      );
       imagenUrl = await subirImagenPublicacion(localPath);
       fs.unlinkSync(localPath);
     }
@@ -79,7 +83,11 @@ const editarPublicacion = async (req, res) => {
     let imagenUrl = publicacion.imagen;
     if (req.files && req.files.length > 0) {
       const archivo = req.files[0];
-      const localPath = path.join(__dirname, "../uploads/publicaciones", archivo.filename);
+      const localPath = path.join(
+        __dirname,
+        "../uploads/publicaciones",
+        archivo.filename
+      );
       imagenUrl = await subirImagenPublicacion(localPath);
       fs.unlinkSync(localPath);
     }
@@ -154,7 +162,6 @@ const listarTodasPublicaciones = async (req, res) => {
   }
 };
 
-
 // ✅ Eliminar publicación + imagen en Cloudinary
 const eliminarPublicacion = async (req, res) => {
   try {
@@ -179,7 +186,9 @@ const eliminarPublicacion = async (req, res) => {
 
     // 🧹 Si tiene imagen, eliminarla de Cloudinary
     if (publicacion.imagen) {
-      const publicIdMatch = publicacion.imagen.match(/\/publicaciones_empresa\/(.+)\.(jpg|png|jpeg|gif)/);
+      const publicIdMatch = publicacion.imagen.match(
+        /\/publicaciones_empresa\/(.+)\.(jpg|png|jpeg|gif)/
+      );
       if (publicIdMatch && publicIdMatch[1]) {
         const publicId = `publicaciones_empresa/${publicIdMatch[1]}`;
         await cloudinary.uploader.destroy(publicId);
