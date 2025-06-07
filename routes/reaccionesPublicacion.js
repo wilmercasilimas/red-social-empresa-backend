@@ -2,8 +2,6 @@
 const express = require("express");
 const router = express.Router();
 const auth = require("../middlewares/auth");
-
-// ✅ IMPORTACIÓN CORRECTA (asegúrate del nombre)
 const {
   reaccionar,
   eliminarReaccion,
