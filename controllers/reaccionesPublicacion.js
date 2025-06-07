@@ -79,8 +79,8 @@ const obtenerReacciones = async (req, res) => {
   }
 };
 
-module.exports = {
+const {
   reaccionar,
   eliminarReaccion,
   obtenerReacciones,
-};
+} = require("../controllers/reaccionesPublicacion");
