@@ -6,7 +6,6 @@ const reaccionar = async (req, res) => {
     const { publicacionId, tipo } = req.body;
     const autorId = req.user.id;
 
-    // Verifica si ya existe una reacción del mismo tipo
     const existente = await Reaccion.findOne({
       publicacion: publicacionId,
       autor: autorId,
@@ -16,13 +15,11 @@ const reaccionar = async (req, res) => {
       if (existente.tipo === tipo) {
         return res.status(200).json({ mensaje: "Ya habías reaccionado con este tipo" });
       }
-      // Actualiza si es distinto
       existente.tipo = tipo;
       await existente.save();
       return res.status(200).json({ mensaje: "Reacción actualizada", reaccion: existente });
     }
 
-    // Crear nueva
     const nueva = new Reaccion({
       publicacion: publicacionId,
       tipo,
@@ -69,12 +66,7 @@ const obtenerReacciones = async (req, res) => {
       { $group: { _id: "$tipo", total: { $sum: 1 } } },
     ]);
 
-    const resultado = {
-      like: 0,
-      dislike: 0,
-      love: 0,
-    };
-
+    const resultado = { like: 0, dislike: 0, love: 0 };
     resumen.forEach((r) => {
       resultado[r._id] = r.total;
     });
