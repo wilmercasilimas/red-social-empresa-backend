@@ -1,7 +1,7 @@
-// models/Reaccion.js
+// models/Impresion.js
 const mongoose = require("mongoose");
 
-const ReaccionSchema = new mongoose.Schema(
+const ImpresionSchema = new mongoose.Schema(
   {
     publicacion: {
       type: mongoose.Schema.Types.ObjectId,
@@ -15,11 +15,11 @@ const ReaccionSchema = new mongoose.Schema(
     },
     tipo: {
       type: String,
-      enum: ["like", "love", "dislike"],
+      enum: ["like", "love", "dislike"], // puedes cambiar los valores si deseas
       required: true,
     },
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Reaccion", ReaccionSchema);
+module.exports = mongoose.model("Impresion", ImpresionSchema);
