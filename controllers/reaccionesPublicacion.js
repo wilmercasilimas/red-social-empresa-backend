@@ -2,7 +2,7 @@
 const Reaccion = require("../models/Reaccion");
 const Publicacion = require("../models/Publicacion");
 
-module.exports = async (req, res) => {
+async function agregarReaccion(req, res) {
   try {
     const { publicacionId, tipo } = req.body;
     const usuarioId = req.user.id;
@@ -44,4 +44,6 @@ module.exports = async (req, res) => {
     console.error("Error al agregar reacción:", error);
     res.status(500).json({ msg: "Error interno al agregar la reacción" });
   }
-};
+}
+
+module.exports = agregarReaccion; // ✅ aquí exportamos directamente la FUNCIÓN
