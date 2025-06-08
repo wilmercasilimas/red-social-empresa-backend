@@ -2,7 +2,7 @@
 const Reaccion = require("../models/Reaccion");
 const Publicacion = require("../models/Publicacion");
 
-const agregarReaccion = async (req, res) => {
+module.exports = async (req, res) => {
   try {
     const { publicacionId, tipo } = req.body;
     const usuarioId = req.user.id;
@@ -45,5 +45,3 @@ const agregarReaccion = async (req, res) => {
     res.status(500).json({ msg: "Error interno al agregar la reacción" });
   }
 };
-
-module.exports = agregarReaccion;

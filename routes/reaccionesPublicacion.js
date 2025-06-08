@@ -1,4 +1,3 @@
-// routes/reaccionesPublicacion.js
 const express = require("express");
 const router = express.Router();
 const agregarReaccion = require("../controllers/reaccionesPublicacion");
