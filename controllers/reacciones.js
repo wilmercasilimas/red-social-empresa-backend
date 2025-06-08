@@ -1,4 +1,4 @@
-// controllers/reaccionesPublicacion.js
+// controllers/reacciones.js
 const Reaccion = require("../models/Reaccion");
 const Publicacion = require("../models/Publicacion");
 
@@ -46,4 +46,4 @@ async function agregarReaccion(req, res) {
   }
 }
 
-module.exports = agregarReaccion; // ✅ aquí exportamos directamente la FUNCIÓN
+module.exports = agregarReaccion; // ✅ exporta directamente la FUNCIÓN
