@@ -1,8 +1,9 @@
-// routes/reacciones.js
 const express = require("express");
 const router = express.Router();
-const agregarReaccion = require("../controllers/reacciones"); // ✅ importar función directa
 const auth = require("../middlewares/auth");
+
+// ⚠️ Importar como función directa
+const agregarReaccion = require("../controllers/reacciones");
 
 router.post("/agregar", auth, agregarReaccion);
 

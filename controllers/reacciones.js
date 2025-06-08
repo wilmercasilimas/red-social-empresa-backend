@@ -1,49 +1,30 @@
-// controllers/reacciones.js
 const Reaccion = require("../models/Reaccion");
-const Publicacion = require("../models/Publicacion");
 
-async function agregarReaccion(req, res) {
+const agregarReaccion = async (req, res) => {
   try {
     const { publicacionId, tipo } = req.body;
     const usuarioId = req.user.id;
 
-    if (!publicacionId || !tipo) {
-      return res.status(400).json({ msg: "Faltan datos obligatorios" });
-    }
-
-    const tiposPermitidos = ["like", "love", "dislike"];
-    if (!tiposPermitidos.includes(tipo)) {
-      return res.status(400).json({ msg: "Tipo de reacción no válido" });
-    }
-
-    const existePublicacion = await Publicacion.findById(publicacionId);
-    if (!existePublicacion) {
-      return res.status(404).json({ msg: "Publicación no encontrada" });
-    }
-
-    const reaccionExistente = await Reaccion.findOne({
-      publicacion: publicacionId,
-      usuario: usuarioId,
-    });
-
-    if (reaccionExistente) {
-      reaccionExistente.tipo = tipo;
-      await reaccionExistente.save();
-      return res.json({ msg: "Reacción actualizada correctamente" });
-    }
-
     const nuevaReaccion = new Reaccion({
       publicacion: publicacionId,
-      usuario: usuarioId,
       tipo,
+      usuario: usuarioId,
     });
 
     await nuevaReaccion.save();
-    res.json({ msg: "Reacción registrada correctamente" });
+
+    res.status(201).json({
+      status: "success",
+      mensaje: "Reacción registrada correctamente",
+      reaccion: nuevaReaccion,
+    });
   } catch (error) {
     console.error("Error al agregar reacción:", error);
-    res.status(500).json({ msg: "Error interno al agregar la reacción" });
+    res.status(500).json({
+      status: "error",
+      mensaje: "Error al agregar reacción",
+    });
   }
-}
+};
 
-module.exports = agregarReaccion; // ✅ exporta directamente la FUNCIÓN
+module.exports = agregarReaccion; // ⚠️ Exportar como función directa
