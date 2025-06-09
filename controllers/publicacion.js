@@ -130,17 +130,25 @@ const misPublicaciones = async (req, res) => {
   }
 };
 
-// ✅ Listar TODAS las publicaciones (todos los roles) con paginación y autor incluido
+// ✅ Listar TODAS las publicaciones (todos los roles) con filtros opcionales
 const listarTodasPublicaciones = async (req, res) => {
   try {
     const pagina = parseInt(req.query.pagina) || 1;
     const limite = parseInt(req.query.limite) || 10;
     const skip = (pagina - 1) * limite;
 
-    const total = await Publicacion.countDocuments();
-    const publicaciones = await Publicacion.find()
+    // 🧠 Filtros opcionales por query string
+    const { autor, tarea } = req.query;
+    const filtros = {};
+
+    if (autor) filtros.autor = autor;
+    if (tarea) filtros.tarea = tarea;
+
+    const total = await Publicacion.countDocuments(filtros);
+
+    const publicaciones = await Publicacion.find(filtros)
       .populate("tarea")
-      .populate("autor", "nombre apellidos imagen") // ✅ ahora incluye datos del autor
+      .populate("autor", "nombre apellidos imagen")
       .sort({ creado_en: -1 })
       .skip(skip)
       .limit(limite);
@@ -155,6 +163,7 @@ const listarTodasPublicaciones = async (req, res) => {
       publicaciones,
     });
   } catch (error) {
+    console.error("Error en listarTodasPublicaciones:", error);
     return res.status(500).json({
       status: "error",
       message: "Error al listar publicaciones.",
