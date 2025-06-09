@@ -130,29 +130,65 @@ const misPublicaciones = async (req, res) => {
   }
 };
 
-// ✅ Listar TODAS las publicaciones (todos los roles) con filtros opcionales
 const listarTodasPublicaciones = async (req, res) => {
   try {
     const pagina = parseInt(req.query.pagina) || 1;
     const limite = parseInt(req.query.limite) || 10;
     const skip = (pagina - 1) * limite;
 
-    // 🧠 Filtros opcionales por query string
-    const { autor, tarea } = req.query;
-    const filtros = {};
+    const { autor, tarea, area } = req.query;
 
-    if (autor) filtros.autor = autor;
-    if (tarea) filtros.tarea = tarea;
+    // 🔍 Armamos condiciones de filtrado
+    const matchStage = {};
 
-    const total = await Publicacion.countDocuments(filtros);
+    if (tarea) matchStage.tarea = tarea;
+    if (autor) matchStage.autor = autor;
 
-    const publicaciones = await Publicacion.find(filtros)
-      .populate("tarea")
-      .populate("autor", "nombre apellidos imagen")
-      .sort({ creado_en: -1 })
-      .skip(skip)
-      .limit(limite);
+    // Construcción del pipeline
+    const pipeline = [
+      { $match: matchStage },
 
+      // Join con usuarios
+      {
+        $lookup: {
+          from: "users",
+          localField: "autor",
+          foreignField: "_id",
+          as: "autor",
+        },
+      },
+      { $unwind: "$autor" },
+
+      // Filtro adicional por área si aplica
+      ...(area ? [{ $match: { "autor.area": area } }] : []),
+
+      // Join con tareas
+      {
+        $lookup: {
+          from: "tareas",
+          localField: "tarea",
+          foreignField: "_id",
+          as: "tarea",
+        },
+      },
+      { $unwind: "$tarea" },
+
+      // Orden y paginación
+      { $sort: { creado_en: -1 } },
+      { $skip: skip },
+      { $limit: limite },
+    ];
+
+    // Pipeline para contar resultados totales
+    const conteoPipeline = [...pipeline];
+    conteoPipeline.splice(conteoPipeline.length - 3); // quita skip y limit y sort
+
+    const [publicaciones, conteo] = await Promise.all([
+      Publicacion.aggregate(pipeline),
+      Publicacion.aggregate([...conteoPipeline, { $count: "total" }]),
+    ]);
+
+    const total = conteo[0]?.total || 0;
     const totalPaginas = Math.ceil(total / limite);
 
     return res.status(200).json({
