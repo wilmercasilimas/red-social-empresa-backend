@@ -1,5 +1,8 @@
 const Tarea = require("../models/Tarea");
 const User = require("../models/User");
+const {
+  enviarCorreoTareaAsignada,
+} = require("../helpers/enviarCorreoTareaAsignada");
 
 const crearTarea = async (req, res) => {
   try {
@@ -21,7 +24,12 @@ const crearTarea = async (req, res) => {
       });
     }
 
-    const cargosNoPermitidos = ["admin", "gerencia", "ejecutivos", "precidencia"];
+    const cargosNoPermitidos = [
+      "admin",
+      "gerencia",
+      "ejecutivos",
+      "precidencia",
+    ];
     if (cargosNoPermitidos.includes(usuarioAsignado.cargo.toLowerCase())) {
       return res.status(400).json({
         status: "error",
@@ -39,6 +47,21 @@ const crearTarea = async (req, res) => {
 
     const tareaGuardada = await nuevaTarea.save();
 
+    // ✅ Envío de correo al asignado
+    try {
+      await enviarCorreoTareaAsignada(
+        usuarioAsignado.email,
+        usuarioAsignado.nombre,
+        titulo,
+        fecha_entrega
+      );
+    } catch (correoError) {
+      console.warn(
+        "⚠️ Tarea creada, pero fallo al enviar correo:",
+        correoError.message
+      );
+    }
+
     return res.status(201).json({
       status: "success",
       message: "Tarea creada correctamente.",
@@ -52,7 +75,6 @@ const crearTarea = async (req, res) => {
     });
   }
 };
-
 const listarTareas = async (req, res) => {
   try {
     const tareas = await Tarea.find({ asignada_a: req.user.id })
