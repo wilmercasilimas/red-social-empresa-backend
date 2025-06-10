@@ -123,7 +123,8 @@ const misPublicaciones = async (req, res) => {
   }
 };
 
-// Listar TODAS las publicaciones con filtros y paginación
+const mongoose = require("mongoose");
+
 const listarTodasPublicaciones = async (req, res) => {
   try {
     const pagina = parseInt(req.query.pagina) || 1;
@@ -132,13 +133,12 @@ const listarTodasPublicaciones = async (req, res) => {
 
     const { autor, tarea, area } = req.query;
 
-    const matchStage = {};
-    if (tarea) matchStage.tarea = tarea;
-    if (autor) matchStage.autor = autor;
+    // Convertir IDs a ObjectId si son válidos
+    const autorId = autor && mongoose.Types.ObjectId.isValid(autor) ? new mongoose.Types.ObjectId(autor) : null;
+    const tareaId = tarea && mongoose.Types.ObjectId.isValid(tarea) ? new mongoose.Types.ObjectId(tarea) : null;
+    const areaId = area && mongoose.Types.ObjectId.isValid(area) ? new mongoose.Types.ObjectId(area) : null;
 
     const pipelineBase = [
-      { $match: matchStage },
-
       {
         $lookup: {
           from: "users",
@@ -149,8 +149,6 @@ const listarTodasPublicaciones = async (req, res) => {
       },
       { $unwind: "$autor" },
 
-      ...(area ? [{ $match: { "autor.area": area } }] : []),
-
       {
         $lookup: {
           from: "tareas",
@@ -160,6 +158,15 @@ const listarTodasPublicaciones = async (req, res) => {
         },
       },
       { $unwind: "$tarea" },
+
+      // Filtros aplicados luego del enriquecimiento
+      {
+        $match: {
+          ...(autorId && { "autor._id": autorId }),
+          ...(tareaId && { "tarea._id": tareaId }),
+          ...(areaId && { "autor.area": areaId }),
+        },
+      },
     ];
 
     const pipelineConteo = [...pipelineBase, { $count: "total" }];
@@ -193,6 +200,7 @@ const listarTodasPublicaciones = async (req, res) => {
     });
   }
 };
+
 
 // Eliminar publicación y borrar imagen de Cloudinary
 const eliminarPublicacion = async (req, res) => {
