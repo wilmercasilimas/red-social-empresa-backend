@@ -33,6 +33,11 @@ app.get("/api/avatar/default.png", (req, res) => {
   res.redirect(process.env.DEFAULT_AVATAR_URL);
 });
 
+// ✅ Endpoint keep-alive para Render
+app.get("/api/ping", (req, res) => {
+  res.status(200).send("pong");
+});
+
 // Rutas
 const userRoutes = require("./routes/user");
 app.use("/api/user", userRoutes);
@@ -54,8 +59,6 @@ app.use("/api/comentario", comentarioRoutes);
 
 const incidenciaRoutes = require("./routes/incidencia");
 app.use("/api/incidencia", incidenciaRoutes);
-
-
 
 // Ruta de prueba
 app.get("/", (req, res) => {
