@@ -95,12 +95,16 @@ const listarTodasTareas = async (req, res) => {
       .sort({ creada_en: -1 });
 
     if (area) {
-      tareas = tareas.filter(
-        (tarea) =>
-          typeof tarea.asignada_a === "object" &&
-          tarea.asignada_a.area &&
-          tarea.asignada_a.area._id.toString() === area
-      );
+      tareas = tareas.filter((tarea) => {
+        const asignada = tarea.asignada_a;
+        return (
+          asignada &&
+          typeof asignada === "object" &&
+          asignada.area &&
+          typeof asignada.area === "object" &&
+          asignada.area._id?.toString() === area
+        );
+      });
     }
 
     return res.status(200).json({
