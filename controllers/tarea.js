@@ -78,7 +78,13 @@ const crearTarea = async (req, res) => {
 
 const listarTodasTareas = async (req, res) => {
   try {
-    const tareas = await Tarea.find()
+    const { asignada_a, creada_por } = req.query;
+
+    const filtros = {};
+    if (asignada_a) filtros.asignada_a = asignada_a;
+    if (creada_por) filtros.creada_por = creada_por;
+
+    const tareas = await Tarea.find(filtros)
       .populate("creada_por", "nombre apellidos email")
       .populate("asignada_a", "nombre apellidos email")
       .sort({ creada_en: -1 });

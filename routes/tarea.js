@@ -8,6 +8,8 @@ const { auth, esAdminOGerencia } = require("../middlewares/auth");
 // ✅ correcto
 router.post("/crear", auth, esAdminOGerencia, TareaController.crearTarea);
 
+// Listar todas las tareas (admin o gerencia)
+// Soporta filtros por ?asignada_a=ID y ?creada_por=ID
 router.get("/todas", auth, esAdminOGerencia, TareaController.listarTodasTareas);
 
 // Listar tareas del usuario autenticado
