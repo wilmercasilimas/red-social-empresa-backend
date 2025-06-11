@@ -28,3 +28,6 @@ uploads/publicaciones/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Scripts auxiliares locales
+utils/wakeRender.js
