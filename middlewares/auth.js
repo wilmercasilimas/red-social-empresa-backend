@@ -5,7 +5,7 @@ const jwt = require("jsonwebtoken");
  * Middleware: Verifica si el token JWT es válido.
  */
 const auth = (req, res, next) => {
-  const token = req.header("Authorization");
+  const token = req.header("Authorization")?.replace("Bearer ", "").trim();
 
   if (!token) {
     return res.status(401).json({
@@ -35,7 +35,8 @@ const esAdmin = (req, res, next) => {
   if (!req.user || req.user.rol !== "admin") {
     return res.status(403).json({
       status: "error",
-      message: "Acceso denegado. Solo administradores pueden realizar esta acción.",
+      message:
+        "Acceso denegado. Solo administradores pueden realizar esta acción.",
     });
   }
   next();
@@ -48,7 +49,8 @@ const esAdminOGerencia = (req, res, next) => {
   if (!req.user || !["admin", "gerente"].includes(req.user.rol)) {
     return res.status(403).json({
       status: "error",
-      message: "Acceso denegado. Solo administradores o gerencia pueden realizar esta acción.",
+      message:
+        "Acceso denegado. Solo administradores o gerencia pueden realizar esta acción.",
     });
   }
   next();
