@@ -1,4 +1,3 @@
-// middlewares/auth.js
 const jwt = require("jsonwebtoken");
 
 /**
@@ -32,7 +31,8 @@ const auth = (req, res, next) => {
  * Middleware: Verifica si el usuario tiene rol 'admin'.
  */
 const esAdmin = (req, res, next) => {
-  if (!req.user || req.user.rol !== "admin") {
+  const rol = req.user?.rol?.toLowerCase();
+  if (rol !== "admin") {
     return res.status(403).json({
       status: "error",
       message:
@@ -46,7 +46,8 @@ const esAdmin = (req, res, next) => {
  * Middleware: Permite acceso a 'admin' o 'gerente'
  */
 const esAdminOGerencia = (req, res, next) => {
-  if (!req.user || !["admin", "gerente"].includes(req.user.rol)) {
+  const rol = req.user?.rol?.toLowerCase();
+  if (!["admin", "gerente"].includes(rol)) {
     return res.status(403).json({
       status: "error",
       message:
