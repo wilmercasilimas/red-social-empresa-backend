@@ -9,7 +9,7 @@ const crearTarea = async (req, res) => {
     const { titulo, descripcion, asignada_a, fecha_entrega } = req.body;
     const creador = req.user;
 
-    if (!["admin", "gerencia"].includes(creador.rol)) {
+    if (!["admin", "gerente"].includes(creador.rol?.toLowerCase())) {
       return res.status(403).json({
         status: "error",
         message: "Solo administradores o gerencia pueden crear tareas.",
