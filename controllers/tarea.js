@@ -79,6 +79,7 @@ const listarTareas = async (req, res) => {
   try {
     const tareas = await Tarea.find({ asignada_a: req.user.id })
       .populate("creada_por", "nombre apellidos email")
+      .populate("asignada_a", "nombre apellidos email")
       .sort({ creada_en: -1 });
 
     return res.status(200).json({
