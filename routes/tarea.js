@@ -8,6 +8,7 @@ const { auth, esAdminOGerencia } = require("../middlewares/auth");
 // ✅ correcto
 router.post("/crear", auth, esAdminOGerencia, TareaController.crearTarea);
 
+router.get("/todas", auth, esAdminOGerencia, TareaController.listarTodasTareas);
 
 // Listar tareas del usuario autenticado
 router.get("/listar", auth, TareaController.listarTareas);

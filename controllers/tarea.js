@@ -75,6 +75,29 @@ const crearTarea = async (req, res) => {
     });
   }
 };
+
+const listarTodasTareas = async (req, res) => {
+  try {
+    const tareas = await Tarea.find()
+      .populate("creada_por", "nombre apellidos email")
+      .populate("asignada_a", "nombre apellidos email")
+      .sort({ creada_en: -1 });
+
+    return res.status(200).json({
+      status: "success",
+      message: "Listado de todas las tareas.",
+      total: tareas.length,
+      tareas,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      status: "error",
+      message: "Error al obtener las tareas.",
+      error: error.message,
+    });
+  }
+};
+
 const listarTareas = async (req, res) => {
   try {
     const tareas = await Tarea.find({ asignada_a: req.user.id })
@@ -184,4 +207,5 @@ module.exports = {
   listarTareas,
   editarTarea,
   eliminarTarea,
+  listarTodasTareas,
 };
