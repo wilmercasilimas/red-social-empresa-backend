@@ -78,16 +78,30 @@ const crearTarea = async (req, res) => {
 
 const listarTodasTareas = async (req, res) => {
   try {
-    const { asignada_a, creada_por } = req.query;
+    const { asignada_a, creada_por, area } = req.query;
 
-    const filtros = {};
-    if (asignada_a) filtros.asignada_a = asignada_a;
-    if (creada_por) filtros.creada_por = creada_por;
+    const filtro = {};
 
-    const tareas = await Tarea.find(filtros)
+    if (asignada_a) filtro["asignada_a"] = asignada_a;
+    if (creada_por) filtro["creada_por"] = creada_por;
+
+    let tareas = await Tarea.find(filtro)
+      .populate({
+        path: "asignada_a",
+        select: "nombre apellidos email area",
+        populate: { path: "area", select: "nombre" },
+      })
       .populate("creada_por", "nombre apellidos email")
-      .populate("asignada_a", "nombre apellidos email")
       .sort({ creada_en: -1 });
+
+    if (area) {
+      tareas = tareas.filter(
+        (tarea) =>
+          typeof tarea.asignada_a === "object" &&
+          tarea.asignada_a.area &&
+          tarea.asignada_a.area._id.toString() === area
+      );
+    }
 
     return res.status(200).json({
       status: "success",
@@ -103,6 +117,7 @@ const listarTodasTareas = async (req, res) => {
     });
   }
 };
+
 
 const listarTareas = async (req, res) => {
   try {
