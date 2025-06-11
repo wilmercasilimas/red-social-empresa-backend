@@ -1,10 +1,13 @@
 const express = require("express");
 const router = express.Router();
 const TareaController = require("../controllers/tarea");
-const { auth, esAdmin } = require("../middlewares/auth");
+const { auth, esAdminOGerencia } = require("../middlewares/auth");
+
 
 // Crear tarea (solo admin o gerencia)
-router.post("/crear", auth, TareaController.crearTarea);
+// ✅ correcto
+router.post("/crear", auth, esAdminOGerencia, TareaController.crearTarea);
+
 
 // Listar tareas del usuario autenticado
 router.get("/listar", auth, TareaController.listarTareas);
