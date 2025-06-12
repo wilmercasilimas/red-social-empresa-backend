@@ -22,7 +22,12 @@ const crearTarea = async (req, res) => {
       });
     }
 
-    const cargosNoPermitidos = ["admin", "gerencia", "ejecutivos", "precidencia"];
+    const cargosNoPermitidos = [
+      "admin",
+      "gerencia",
+      "ejecutivos",
+      "precidencia",
+    ];
     if (cargosNoPermitidos.includes(usuarioAsignado.cargo.toLowerCase())) {
       return res.status(400).json({
         status: "error",
@@ -49,7 +54,10 @@ const crearTarea = async (req, res) => {
         fecha_entrega
       );
     } catch (correoError) {
-      console.warn("⚠️ Tarea creada, pero fallo al enviar correo:", correoError.message);
+      console.warn(
+        "⚠️ Tarea creada, pero fallo al enviar correo:",
+        correoError.message
+      );
     }
 
     return res.status(201).json({
@@ -138,7 +146,10 @@ const editarTarea = async (req, res) => {
     const { id } = req.params;
     const { titulo, descripcion, estado, fecha_entrega } = req.body;
 
-    const tarea = await Tarea.findById(id).populate("asignada_a", "email nombre");
+    const tarea = await Tarea.findById(id).populate(
+      "asignada_a",
+      "email nombre"
+    );
 
     if (!["admin", "gerente"].includes(req.user.rol.toLowerCase())) {
       return res.status(403).json({
@@ -147,7 +158,10 @@ const editarTarea = async (req, res) => {
       });
     }
 
-    if (tarea.creada_por.toString() !== req.user.id && req.user.rol !== "admin") {
+    if (
+      tarea.creada_por.toString() !== req.user.id &&
+      req.user.rol !== "admin"
+    ) {
       return res.status(403).json({
         status: "error",
         message: "No autorizado para editar esta tarea.",
@@ -178,7 +192,10 @@ const editarTarea = async (req, res) => {
         );
       }
     } catch (correoError) {
-      console.warn("⚠️ Tarea editada, pero fallo al enviar correo:", correoError.message);
+      console.warn(
+        "⚠️ Tarea editada, pero fallo al enviar correo:",
+        correoError.message
+      );
     }
 
     return res.status(200).json({
@@ -207,7 +224,10 @@ const eliminarTarea = async (req, res) => {
       });
     }
 
-    if (tarea.creada_por.toString() !== req.user.id && req.user.rol !== "admin") {
+    if (
+      tarea.creada_por.toString() !== req.user.id &&
+      req.user.rol !== "admin"
+    ) {
       return res.status(403).json({
         status: "error",
         message: "No autorizado para eliminar esta tarea.",
