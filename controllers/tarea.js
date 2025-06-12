@@ -76,11 +76,14 @@ const crearTarea = async (req, res) => {
 
 const listarTodasTareas = async (req, res) => {
   try {
-    const { asignada_a, creada_por, area } = req.query;
+    const { asignada_a, creada_por, area, pagina = 1, limite = 10 } = req.query;
 
     const filtro = {};
     if (asignada_a) filtro["asignada_a"] = asignada_a;
     if (creada_por) filtro["creada_por"] = creada_por;
+
+    const skip = (parseInt(pagina) - 1) * parseInt(limite);
+    const limit = parseInt(limite);
 
     let tareas = await Tarea.find(filtro)
       .populate({
@@ -89,7 +92,9 @@ const listarTodasTareas = async (req, res) => {
         populate: { path: "area", select: "nombre" },
       })
       .populate("creada_por", "nombre apellidos email")
-      .sort({ creada_en: -1 });
+      .sort({ creada_en: -1 })
+      .skip(skip)
+      .limit(limit);
 
     if (area) {
       tareas = tareas.filter((tarea) => {
@@ -104,10 +109,14 @@ const listarTodasTareas = async (req, res) => {
       });
     }
 
+    const total = await Tarea.countDocuments(filtro);
+
     return res.status(200).json({
       status: "success",
       message: "Listado de todas las tareas.",
-      total: tareas.length,
+      total,
+      pagina: parseInt(pagina),
+      paginas: Math.ceil(total / limit),
       tareas,
     });
   } catch (error) {
@@ -121,15 +130,28 @@ const listarTodasTareas = async (req, res) => {
 
 const listarTareas = async (req, res) => {
   try {
-    const tareas = await Tarea.find({ asignada_a: req.user.id })
-      .populate("creada_por", "nombre apellidos email")
-      .populate("asignada_a", "nombre apellidos email")
-      .sort({ creada_en: -1 });
+    const { pagina = 1, limite = 10 } = req.query;
+    const skip = (parseInt(pagina) - 1) * parseInt(limite);
+    const limit = parseInt(limite);
+
+    const filtro = { asignada_a: req.user.id };
+
+    const [tareas, total] = await Promise.all([
+      Tarea.find(filtro)
+        .populate("creada_por", "nombre apellidos email")
+        .populate("asignada_a", "nombre apellidos email")
+        .sort({ creada_en: -1 })
+        .skip(skip)
+        .limit(limit),
+      Tarea.countDocuments(filtro),
+    ]);
 
     return res.status(200).json({
       status: "success",
       message: "Listado de tareas.",
-      total: tareas.length,
+      total,
+      pagina: parseInt(pagina),
+      paginas: Math.ceil(total / limit),
       tareas,
     });
   } catch (error) {
