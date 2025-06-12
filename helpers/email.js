@@ -35,4 +35,5 @@ const enviarCorreoRegistro = async (destinatario, nombre, passwordPlano) => {
 
 module.exports = {
   enviarCorreoRegistro,
+  transporter,
 };
