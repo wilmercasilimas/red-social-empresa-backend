@@ -77,16 +77,21 @@ const crearTarea = async (req, res) => {
 const listarTodasTareas = async (req, res) => {
   try {
     const { asignada_a, creada_por, area, pagina = 1, limite = 10 } = req.query;
+
     const page = parseInt(pagina);
     const limit = parseInt(limite);
     const skip = (page - 1) * limit;
 
-    const matchStage = {};
-    if (asignada_a) matchStage["asignada_a"] = asignada_a;
-    if (creada_por) matchStage["creada_por"] = creada_por;
+    const matchEtapa = {};
+    if (asignada_a && mongoose.Types.ObjectId.isValid(asignada_a)) {
+      matchEtapa["asignada_a"] = new mongoose.Types.ObjectId(asignada_a);
+    }
+    if (creada_por && mongoose.Types.ObjectId.isValid(creada_por)) {
+      matchEtapa["creada_por"] = new mongoose.Types.ObjectId(creada_por);
+    }
 
     const pipeline = [
-      { $match: matchStage },
+      { $match: matchEtapa },
       {
         $lookup: {
           from: "users",
@@ -116,21 +121,25 @@ const listarTodasTareas = async (req, res) => {
       { $unwind: "$creada_por" },
     ];
 
-    if (area) {
+    if (area && mongoose.Types.ObjectId.isValid(area)) {
       pipeline.push({
-        $match: { "asignada_a.area._id": new mongoose.Types.ObjectId(area) },
+        $match: {
+          "asignada_a.area._id": new mongoose.Types.ObjectId(area),
+        },
       });
     }
 
-    const pipelineTotal = [...pipeline, { $count: "total" }];
-    const resultadoTotal = await Tarea.aggregate(pipelineTotal);
-    const total = resultadoTotal[0]?.total || 0;
-
+    const pipelineTotal = [...pipeline];
     pipeline.push({ $sort: { creada_en: -1 } });
     pipeline.push({ $skip: skip });
     pipeline.push({ $limit: limit });
 
-    const tareas = await Tarea.aggregate(pipeline);
+    const [tareas, totalDocs] = await Promise.all([
+      Tarea.aggregate(pipeline),
+      Tarea.aggregate([...pipelineTotal, { $count: "total" }]),
+    ]);
+
+    const total = totalDocs.length > 0 ? totalDocs[0].total : 0;
 
     return res.status(200).json({
       status: "success",
