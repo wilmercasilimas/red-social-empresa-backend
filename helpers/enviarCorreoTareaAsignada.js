@@ -42,10 +42,13 @@ const enviarCorreoTarea = async (tipo, destinatario, nombre, tituloTarea, fechaE
       break;
 
     default:
+      console.warn("❗ Tipo de correo no válido:", tipo);
       throw new Error("Tipo de correo no válido.");
   }
 
   try {
+    console.log(`📨 Enviando correo [${tipo}] a ${destinatario} (${nombre})...`);
+
     const info = await transporter.sendMail({
       from: `"RedSocialEmpresa" <${process.env.EMAIL_USER}>`,
       to: destinatario,
@@ -57,6 +60,7 @@ const enviarCorreoTarea = async (tipo, destinatario, nombre, tituloTarea, fechaE
       `,
     });
 
+    console.log("✅ Correo enviado correctamente:", info.messageId);
     return info;
   } catch (error) {
     console.error("❌ Error al enviar correo de tarea:", error);
