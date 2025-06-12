@@ -1,8 +1,6 @@
 const Tarea = require("../models/Tarea");
 const User = require("../models/User");
-const {
-  enviarCorreoTareaAsignada,
-} = require("../helpers/enviarCorreoTareaAsignada");
+const { enviarCorreoTarea } = require("../helpers/enviarCorreoTareaAsignada");
 
 const crearTarea = async (req, res) => {
   try {
@@ -24,12 +22,7 @@ const crearTarea = async (req, res) => {
       });
     }
 
-    const cargosNoPermitidos = [
-      "admin",
-      "gerencia",
-      "ejecutivos",
-      "precidencia",
-    ];
+    const cargosNoPermitidos = ["admin", "gerencia", "ejecutivos", "precidencia"];
     if (cargosNoPermitidos.includes(usuarioAsignado.cargo.toLowerCase())) {
       return res.status(400).json({
         status: "error",
@@ -47,19 +40,16 @@ const crearTarea = async (req, res) => {
 
     const tareaGuardada = await nuevaTarea.save();
 
-    // ✅ Envío de correo al asignado
     try {
-      await enviarCorreoTareaAsignada(
+      await enviarCorreoTarea(
+        "asignada",
         usuarioAsignado.email,
         usuarioAsignado.nombre,
         titulo,
         fecha_entrega
       );
     } catch (correoError) {
-      console.warn(
-        "⚠️ Tarea creada, pero fallo al enviar correo:",
-        correoError.message
-      );
+      console.warn("⚠️ Tarea creada, pero fallo al enviar correo:", correoError.message);
     }
 
     return res.status(201).json({
@@ -81,7 +71,6 @@ const listarTodasTareas = async (req, res) => {
     const { asignada_a, creada_por, area } = req.query;
 
     const filtro = {};
-
     if (asignada_a) filtro["asignada_a"] = asignada_a;
     if (creada_por) filtro["creada_por"] = creada_por;
 
@@ -149,9 +138,8 @@ const editarTarea = async (req, res) => {
     const { id } = req.params;
     const { titulo, descripcion, estado, fecha_entrega } = req.body;
 
-    const tarea = await Tarea.findById(id);
+    const tarea = await Tarea.findById(id).populate("asignada_a", "email nombre");
 
-    // editarTarea
     if (!["admin", "gerente"].includes(req.user.rol.toLowerCase())) {
       return res.status(403).json({
         status: "error",
@@ -159,15 +147,14 @@ const editarTarea = async (req, res) => {
       });
     }
 
-    if (
-      tarea.creada_por.toString() !== req.user.id &&
-      req.user.rol !== "admin"
-    ) {
+    if (tarea.creada_por.toString() !== req.user.id && req.user.rol !== "admin") {
       return res.status(403).json({
         status: "error",
         message: "No autorizado para editar esta tarea.",
       });
     }
+
+    const estadoAnterior = tarea.estado;
 
     tarea.titulo = titulo;
     tarea.descripcion = descripcion;
@@ -175,6 +162,24 @@ const editarTarea = async (req, res) => {
     tarea.fecha_entrega = fecha_entrega;
 
     const tareaActualizada = await tarea.save();
+
+    try {
+      const destinatario = tarea.asignada_a?.email;
+      const nombre = tarea.asignada_a?.nombre;
+
+      if (destinatario && nombre) {
+        const tipoCorreo = estado === "completada" ? "completada" : "editada";
+        await enviarCorreoTarea(
+          tipoCorreo,
+          destinatario,
+          nombre,
+          titulo,
+          fecha_entrega
+        );
+      }
+    } catch (correoError) {
+      console.warn("⚠️ Tarea editada, pero fallo al enviar correo:", correoError.message);
+    }
 
     return res.status(200).json({
       status: "success",
@@ -195,7 +200,6 @@ const eliminarTarea = async (req, res) => {
     const { id } = req.params;
     const tarea = await Tarea.findById(id);
 
-    // eliminarTarea
     if (!["admin", "gerente"].includes(req.user.rol.toLowerCase())) {
       return res.status(403).json({
         status: "error",
@@ -203,10 +207,7 @@ const eliminarTarea = async (req, res) => {
       });
     }
 
-    if (
-      tarea.creada_por.toString() !== req.user.id &&
-      req.user.rol !== "admin"
-    ) {
+    if (tarea.creada_por.toString() !== req.user.id && req.user.rol !== "admin") {
       return res.status(403).json({
         status: "error",
         message: "No autorizado para eliminar esta tarea.",
