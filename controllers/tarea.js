@@ -82,9 +82,7 @@ const listarTodasTareas = async (req, res) => {
     if (asignada_a) filtro["asignada_a"] = asignada_a;
     if (creada_por) filtro["creada_por"] = creada_por;
 
-    const skip = (parseInt(pagina) - 1) * parseInt(limite);
-    const limit = parseInt(limite);
-
+    // Obtener todas las tareas que cumplen con los filtros base
     let tareas = await Tarea.find(filtro)
       .populate({
         path: "asignada_a",
@@ -92,10 +90,9 @@ const listarTodasTareas = async (req, res) => {
         populate: { path: "area", select: "nombre" },
       })
       .populate("creada_por", "nombre apellidos email")
-      .sort({ creada_en: -1 })
-      .skip(skip)
-      .limit(limit);
+      .sort({ creada_en: -1 });
 
+    // Filtro adicional por área
     if (area) {
       tareas = tareas.filter((tarea) => {
         const asignada = tarea.asignada_a;
@@ -109,15 +106,19 @@ const listarTodasTareas = async (req, res) => {
       });
     }
 
-    const total = await Tarea.countDocuments(filtro);
+    const total = tareas.length;
+    const page = parseInt(pagina);
+    const limit = parseInt(limite);
+    const inicio = (page - 1) * limit;
+    const tareasPaginadas = tareas.slice(inicio, inicio + limit);
 
     return res.status(200).json({
       status: "success",
       message: "Listado de todas las tareas.",
       total,
-      pagina: parseInt(pagina),
+      pagina: page,
       paginas: Math.ceil(total / limit),
-      tareas,
+      tareas: tareasPaginadas,
     });
   } catch (error) {
     return res.status(500).json({
@@ -127,6 +128,7 @@ const listarTodasTareas = async (req, res) => {
     });
   }
 };
+
 
 const listarTareas = async (req, res) => {
   try {
