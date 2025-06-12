@@ -122,7 +122,6 @@ const listarTodasTareas = async (req, res) => {
   }
 };
 
-
 const listarTareas = async (req, res) => {
   try {
     const tareas = await Tarea.find({ asignada_a: req.user.id })
@@ -152,10 +151,11 @@ const editarTarea = async (req, res) => {
 
     const tarea = await Tarea.findById(id);
 
-    if (!tarea) {
-      return res.status(404).json({
+    // editarTarea
+    if (!["admin", "gerente"].includes(req.user.rol.toLowerCase())) {
+      return res.status(403).json({
         status: "error",
-        message: "Tarea no encontrada.",
+        message: "No autorizado para editar esta tarea.",
       });
     }
 
@@ -195,10 +195,11 @@ const eliminarTarea = async (req, res) => {
     const { id } = req.params;
     const tarea = await Tarea.findById(id);
 
-    if (!tarea) {
-      return res.status(404).json({
+    // eliminarTarea
+    if (!["admin", "gerente"].includes(req.user.rol.toLowerCase())) {
+      return res.status(403).json({
         status: "error",
-        message: "Tarea no encontrada.",
+        message: "No autorizado para eliminar esta tarea.",
       });
     }
 
