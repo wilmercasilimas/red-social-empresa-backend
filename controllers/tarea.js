@@ -77,40 +77,60 @@ const crearTarea = async (req, res) => {
 const listarTodasTareas = async (req, res) => {
   try {
     const { asignada_a, creada_por, area, pagina = 1, limite = 10 } = req.query;
+    const page = parseInt(pagina);
+    const limit = parseInt(limite);
+    const skip = (page - 1) * limit;
 
-    const filtro = {};
-    if (asignada_a) filtro["asignada_a"] = asignada_a;
-    if (creada_por) filtro["creada_por"] = creada_por;
+    const matchStage = {};
+    if (asignada_a) matchStage["asignada_a"] = asignada_a;
+    if (creada_por) matchStage["creada_por"] = creada_por;
 
-    // Obtener todas las tareas que cumplen con los filtros base
-    let tareas = await Tarea.find(filtro)
-      .populate({
-        path: "asignada_a",
-        select: "nombre apellidos email area",
-        populate: { path: "area", select: "nombre" },
-      })
-      .populate("creada_por", "nombre apellidos email")
-      .sort({ creada_en: -1 });
+    const pipeline = [
+      { $match: matchStage },
+      {
+        $lookup: {
+          from: "users",
+          localField: "asignada_a",
+          foreignField: "_id",
+          as: "asignada_a",
+        },
+      },
+      { $unwind: "$asignada_a" },
+      {
+        $lookup: {
+          from: "areas",
+          localField: "asignada_a.area",
+          foreignField: "_id",
+          as: "asignada_a.area",
+        },
+      },
+      { $unwind: "$asignada_a.area" },
+      {
+        $lookup: {
+          from: "users",
+          localField: "creada_por",
+          foreignField: "_id",
+          as: "creada_por",
+        },
+      },
+      { $unwind: "$creada_por" },
+    ];
 
-    // Filtro adicional por área
     if (area) {
-      tareas = tareas.filter((tarea) => {
-        const asignada = tarea.asignada_a;
-        return (
-          asignada &&
-          typeof asignada === "object" &&
-          asignada.area &&
-          typeof asignada.area === "object" &&
-          asignada.area._id?.toString() === area
-        );
+      pipeline.push({
+        $match: { "asignada_a.area._id": new mongoose.Types.ObjectId(area) },
       });
     }
 
-    const total = tareas.length;
-    const page = parseInt(pagina);
-    const limit = parseInt(limite);
-    const inicio = (page - 1) * limit;
-    const tareasPaginadas = tareas.slice(inicio, inicio + limit);
+    const pipelineTotal = [...pipeline, { $count: "total" }];
+    const resultadoTotal = await Tarea.aggregate(pipelineTotal);
+    const total = resultadoTotal[0]?.total || 0;
+
+    pipeline.push({ $sort: { creada_en: -1 } });
+    pipeline.push({ $skip: skip });
+    pipeline.push({ $limit: limit });
+
+    const tareas = await Tarea.aggregate(pipeline);
 
     return res.status(200).json({
       status: "success",
@@ -118,7 +138,7 @@ const listarTodasTareas = async (req, res) => {
       total,
       pagina: page,
       paginas: Math.ceil(total / limit),
-      tareas: tareasPaginadas,
+      tareas,
     });
   } catch (error) {
     return res.status(500).json({
@@ -128,7 +148,6 @@ const listarTodasTareas = async (req, res) => {
     });
   }
 };
-
 
 const listarTareas = async (req, res) => {
   try {
