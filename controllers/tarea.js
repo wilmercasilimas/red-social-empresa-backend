@@ -78,74 +78,44 @@ const listarTodasTareas = async (req, res) => {
   try {
     const { asignada_a, creada_por, area, pagina = 1, limite = 10 } = req.query;
 
-    const page = parseInt(pagina);
+    const filtro = {};
+    if (asignada_a) filtro["asignada_a"] = asignada_a;
+    if (creada_por) filtro["creada_por"] = creada_por;
+
+    const skip = (parseInt(pagina) - 1) * parseInt(limite);
     const limit = parseInt(limite);
-    const skip = (page - 1) * limit;
 
-    const matchEtapa = {};
-    if (asignada_a && mongoose.Types.ObjectId.isValid(asignada_a)) {
-      matchEtapa["asignada_a"] = new mongoose.Types.ObjectId(asignada_a);
-    }
-    if (creada_por && mongoose.Types.ObjectId.isValid(creada_por)) {
-      matchEtapa["creada_por"] = new mongoose.Types.ObjectId(creada_por);
-    }
+    let tareas = await Tarea.find(filtro)
+      .populate({
+        path: "asignada_a",
+        select: "nombre apellidos email area",
+        populate: { path: "area", select: "nombre" },
+      })
+      .populate("creada_por", "nombre apellidos email")
+      .sort({ creada_en: -1 })
+      .skip(skip)
+      .limit(limit);
 
-    const pipeline = [
-      { $match: matchEtapa },
-      {
-        $lookup: {
-          from: "users",
-          localField: "asignada_a",
-          foreignField: "_id",
-          as: "asignada_a",
-        },
-      },
-      { $unwind: "$asignada_a" },
-      {
-        $lookup: {
-          from: "areas",
-          localField: "asignada_a.area",
-          foreignField: "_id",
-          as: "asignada_a.area",
-        },
-      },
-      { $unwind: "$asignada_a.area" },
-      {
-        $lookup: {
-          from: "users",
-          localField: "creada_por",
-          foreignField: "_id",
-          as: "creada_por",
-        },
-      },
-      { $unwind: "$creada_por" },
-    ];
-
-    if (area && mongoose.Types.ObjectId.isValid(area)) {
-      pipeline.push({
-        $match: {
-          "asignada_a.area._id": new mongoose.Types.ObjectId(area),
-        },
+    if (area) {
+      tareas = tareas.filter((tarea) => {
+        const asignada = tarea.asignada_a;
+        return (
+          asignada &&
+          typeof asignada === "object" &&
+          asignada.area &&
+          typeof asignada.area === "object" &&
+          asignada.area._id?.toString() === area
+        );
       });
     }
 
-    const pipelineTotal = [...pipeline];
-    pipeline.push({ $sort: { creada_en: -1 } });
-    pipeline.push({ $skip: skip });
-    pipeline.push({ $limit: limit });
-
-    const [tareas, totalDocs] = await Promise.all([
-      Tarea.aggregate(pipeline),
-      Tarea.aggregate([...pipelineTotal, { $count: "total" }]),
-    ]);
-
-    const total = totalDocs.length > 0 ? totalDocs[0].total : 0;
+    const total = await Tarea.countDocuments(filtro);
 
     return res.status(200).json({
       status: "success",
       message: "Listado de todas las tareas.",
       total,
-      pagina: page,
+      pagina: parseInt(pagina),
       paginas: Math.ceil(total / limit),
       tareas,
     });
@@ -157,6 +127,7 @@ const listarTodasTareas = async (req, res) => {
     });
   }
 };
+
 
 const listarTareas = async (req, res) => {
   try {
@@ -192,6 +163,7 @@ const listarTareas = async (req, res) => {
     });
   }
 };
+
 
 const editarTarea = async (req, res) => {
   try {
