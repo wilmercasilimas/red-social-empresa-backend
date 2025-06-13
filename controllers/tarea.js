@@ -22,12 +22,7 @@ const crearTarea = async (req, res) => {
       });
     }
 
-    const cargosNoPermitidos = [
-      "admin",
-      "gerencia",
-      "ejecutivos",
-      "precidencia",
-    ];
+    const cargosNoPermitidos = ["admin", "gerencia", "ejecutivos", "precidencia"];
     if (cargosNoPermitidos.includes(usuarioAsignado.cargo.toLowerCase())) {
       return res.status(400).json({
         status: "error",
@@ -53,12 +48,7 @@ const crearTarea = async (req, res) => {
         titulo,
         fecha_entrega
       );
-    } catch (correoError) {
-      console.warn(
-        "⚠️ Tarea creada, pero fallo al enviar correo:",
-        correoError.message
-      );
-    }
+    } catch (_) {}
 
     return res.status(201).json({
       status: "success",
@@ -74,7 +64,6 @@ const crearTarea = async (req, res) => {
   }
 };
 
-// controllers/tarea.js
 const listarTodasTareas = async (req, res) => {
   try {
     const { asignada_a, creada_por, area, pagina = 1, limite = 10 } = req.query;
@@ -86,7 +75,6 @@ const listarTodasTareas = async (req, res) => {
     const page = parseInt(pagina);
     const limit = parseInt(limite);
 
-    // Cargar todas las tareas base
     let tareas = await Tarea.find(filtro)
       .populate({
         path: "asignada_a",
@@ -96,7 +84,6 @@ const listarTodasTareas = async (req, res) => {
       .populate("creada_por", "nombre apellidos email")
       .sort({ creada_en: -1 });
 
-    // Filtro por área (requiere cargar tareas antes)
     if (area) {
       tareas = tareas.filter((t) =>
         t.asignada_a?.area?._id?.toString() === area
@@ -106,13 +93,6 @@ const listarTodasTareas = async (req, res) => {
     const total = tareas.length;
     const inicio = (page - 1) * limit;
     const tareasPaginadas = tareas.slice(inicio, inicio + limit);
-
-    // 🟩 LOGS PARA DEPURACIÓN
-    console.log("🟦 BACKEND | Página solicitada:", page);
-    console.log("🔎 Filtros aplicados:", filtro);
-    if (area) console.log("🧭 Filtro adicional por área:", area);
-    console.log("📊 Total tareas encontradas (después de filtros):", tareas.length);
-    console.log("📄 Tareas devueltas en esta página:", tareasPaginadas.map((t) => t._id));
 
     return res.status(200).json({
       status: "success",
@@ -131,8 +111,6 @@ const listarTodasTareas = async (req, res) => {
     });
   }
 };
-
-
 
 const listarTareas = async (req, res) => {
   try {
@@ -169,16 +147,12 @@ const listarTareas = async (req, res) => {
   }
 };
 
-
 const editarTarea = async (req, res) => {
   try {
     const { id } = req.params;
     const { titulo, descripcion, estado, fecha_entrega } = req.body;
 
-    const tarea = await Tarea.findById(id).populate(
-      "asignada_a",
-      "email nombre"
-    );
+    const tarea = await Tarea.findById(id).populate("asignada_a", "email nombre");
 
     if (!["admin", "gerente"].includes(req.user.rol.toLowerCase())) {
       return res.status(403).json({
@@ -196,8 +170,6 @@ const editarTarea = async (req, res) => {
         message: "No autorizado para editar esta tarea.",
       });
     }
-
-    const estadoAnterior = tarea.estado;
 
     tarea.titulo = titulo;
     tarea.descripcion = descripcion;
@@ -220,12 +192,7 @@ const editarTarea = async (req, res) => {
           fecha_entrega
         );
       }
-    } catch (correoError) {
-      console.warn(
-        "⚠️ Tarea editada, pero fallo al enviar correo:",
-        correoError.message
-      );
-    }
+    } catch (_) {}
 
     return res.status(200).json({
       status: "success",
