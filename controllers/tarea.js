@@ -107,6 +107,13 @@ const listarTodasTareas = async (req, res) => {
     const inicio = (page - 1) * limit;
     const tareasPaginadas = tareas.slice(inicio, inicio + limit);
 
+    // 🟩 LOGS PARA DEPURACIÓN
+    console.log("🟦 BACKEND | Página solicitada:", page);
+    console.log("🔎 Filtros aplicados:", filtro);
+    if (area) console.log("🧭 Filtro adicional por área:", area);
+    console.log("📊 Total tareas encontradas (después de filtros):", tareas.length);
+    console.log("📄 Tareas devueltas en esta página:", tareasPaginadas.map((t) => t._id));
+
     return res.status(200).json({
       status: "success",
       message: "Listado de todas las tareas.",
