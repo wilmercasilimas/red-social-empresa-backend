@@ -2,6 +2,7 @@
 const Publicacion = require("../models/Publicacion");
 const fs = require("fs");
 const path = require("path");
+const mongoose = require("mongoose");
 const { cloudinary, subirImagenPublicacion } = require("../helpers/cloudinary");
 
 // Crear nueva publicación
@@ -47,13 +48,14 @@ const crearPublicacion = async (req, res) => {
   }
 };
 
-// Editar publicación existente
+// Editar publicación existente (ahora permite admin y gerencia)
 const editarPublicacion = async (req, res) => {
   try {
     const { texto, tarea } = req.body;
     const publicacionId = req.params.id;
     const usuarioId = req.user.id;
     const esAdmin = req.user.rol === "admin";
+    const esGerente = req.user.rol === "gerente";
 
     if (!texto || !tarea) {
       return res.status(400).json({
@@ -70,7 +72,11 @@ const editarPublicacion = async (req, res) => {
       });
     }
 
-    if (publicacion.autor.toString() !== usuarioId && !esAdmin) {
+    if (
+      publicacion.autor.toString() !== usuarioId &&
+      !esAdmin &&
+      !esGerente
+    ) {
       return res.status(403).json({
         status: "error",
         message: "No tienes permiso para editar esta publicación.",
@@ -123,8 +129,7 @@ const misPublicaciones = async (req, res) => {
   }
 };
 
-const mongoose = require("mongoose");
-
+// Listar todas las publicaciones con filtros
 const listarTodasPublicaciones = async (req, res) => {
   try {
     const pagina = parseInt(req.query.pagina) || 1;
@@ -133,7 +138,6 @@ const listarTodasPublicaciones = async (req, res) => {
 
     const { autor, tarea, area } = req.query;
 
-    // Convertir IDs a ObjectId si son válidos
     const autorId = autor && mongoose.Types.ObjectId.isValid(autor) ? new mongoose.Types.ObjectId(autor) : null;
     const tareaId = tarea && mongoose.Types.ObjectId.isValid(tarea) ? new mongoose.Types.ObjectId(tarea) : null;
     const areaId = area && mongoose.Types.ObjectId.isValid(area) ? new mongoose.Types.ObjectId(area) : null;
@@ -148,7 +152,6 @@ const listarTodasPublicaciones = async (req, res) => {
         },
       },
       { $unwind: "$autor" },
-
       {
         $lookup: {
           from: "tareas",
@@ -158,8 +161,6 @@ const listarTodasPublicaciones = async (req, res) => {
         },
       },
       { $unwind: "$tarea" },
-
-      // Filtros aplicados luego del enriquecimiento
       {
         $match: {
           ...(autorId && { "autor._id": autorId }),
@@ -201,8 +202,7 @@ const listarTodasPublicaciones = async (req, res) => {
   }
 };
 
-
-// Eliminar publicación y borrar imagen de Cloudinary
+// Eliminar publicación
 const eliminarPublicacion = async (req, res) => {
   try {
     const { id } = req.params;
