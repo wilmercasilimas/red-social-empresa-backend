@@ -11,10 +11,22 @@ const app = express();
 // Configuración global de Mongoose
 mongoose.set("strictPopulate", false); // ✅ Para evitar errores con populate
 
-// CORS configurado para desarrollo local
+// ✅ CORS dinámico con whitelist (localhost + producción)
+const whitelist = [
+  "http://localhost:5173",
+  "https://red-social-empresa-frontend.onrender.com", // Producción
+];
 const corsOptions = {
-  origin: ["http://localhost:5173"],
+  origin: function (origin, callback) {
+    if (!origin || whitelist.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("No permitido por CORS"));
+    }
+  },
   credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"],
 };
 app.use(cors(corsOptions));
 
@@ -81,4 +93,5 @@ mongoose
   .catch((error) => {
     console.error("❌ Error de conexión:", error);
   });
+
 // trigger deploy
