@@ -119,6 +119,7 @@ const listarTodasTareas = async (req, res) => {
       message: "Listado de todas las tareas.",
       total,
       pagina: page,
+      limite: limit,
       paginas: Math.ceil(total / limit),
       tareas: tareasPaginadas,
     });
