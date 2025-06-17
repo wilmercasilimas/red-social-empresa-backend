@@ -22,7 +22,12 @@ const crearTarea = async (req, res) => {
       });
     }
 
-    const cargosNoPermitidos = ["admin", "gerencia", "ejecutivos", "precidencia"];
+    const cargosNoPermitidos = [
+      "admin",
+      "gerencia",
+      "ejecutivos",
+      "precidencia",
+    ];
     if (cargosNoPermitidos.includes(usuarioAsignado.cargo.toLowerCase())) {
       return res.status(400).json({
         status: "error",
@@ -30,11 +35,14 @@ const crearTarea = async (req, res) => {
       });
     }
 
+    const fechaEntregaAjustada = new Date(fecha_entrega);
+    fechaEntregaAjustada.setHours(23, 59, 59, 999);
+
     const nuevaTarea = new Tarea({
       titulo,
       descripcion,
       asignada_a,
-      fecha_entrega,
+      fecha_entrega: fechaEntregaAjustada.toISOString(),
       creada_por: creador.id,
     });
 
@@ -46,7 +54,7 @@ const crearTarea = async (req, res) => {
         usuarioAsignado.email,
         usuarioAsignado.nombre,
         titulo,
-        fecha_entrega
+        fechaEntregaAjustada.toISOString()
       );
     } catch (_) {}
 
@@ -85,8 +93,8 @@ const listarTodasTareas = async (req, res) => {
       .sort({ creada_en: -1 });
 
     if (area) {
-      tareas = tareas.filter((t) =>
-        t.asignada_a?.area?._id?.toString() === area
+      tareas = tareas.filter(
+        (t) => t.asignada_a?.area?._id?.toString() === area
       );
     }
 
@@ -152,7 +160,10 @@ const editarTarea = async (req, res) => {
     const { id } = req.params;
     const { titulo, descripcion, estado, fecha_entrega } = req.body;
 
-    const tarea = await Tarea.findById(id).populate("asignada_a", "email nombre");
+    const tarea = await Tarea.findById(id).populate(
+      "asignada_a",
+      "email nombre"
+    );
 
     if (!["admin", "gerente"].includes(req.user.rol.toLowerCase())) {
       return res.status(403).json({
