@@ -86,7 +86,9 @@ mongoose
     console.log("✅ Conectado a MongoDB");
     app.listen(process.env.PORT, () => {
       console.log(`🚀 Servidor corriendo en el puerto ${process.env.PORT}`);
-
+      console.log(
+        `🌐 URL de https://red-social-empresa-backend.onrender.com`
+      );
     });
   })
   .catch((error) => {
