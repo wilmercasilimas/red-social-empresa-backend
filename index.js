@@ -14,8 +14,9 @@ mongoose.set("strictPopulate", false); // ✅ Para evitar errores con populate
 // ✅ CORS dinámico con whitelist (localhost + producción)
 const whitelist = [
   "http://localhost:5173",
-  "https://red-social-empresa-frontend.onrender.com", // Producción
+  "https://red-social-empresa-frontend-9nrj.vercel.app", // ✅ URL real de Vercel
 ];
+
 const corsOptions = {
   origin: function (origin, callback) {
     if (!origin || whitelist.includes(origin)) {
@@ -86,9 +87,7 @@ mongoose
     console.log("✅ Conectado a MongoDB");
     app.listen(process.env.PORT, () => {
       console.log(`🚀 Servidor corriendo en el puerto ${process.env.PORT}`);
-      console.log(
-        `🌐 URL de https://red-social-empresa-backend.onrender.com`
-      );
+      console.log(`🌐 URL de https://red-social-empresa-backend.onrender.com`);
     });
   })
   .catch((error) => {
